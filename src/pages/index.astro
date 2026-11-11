@@ -1,47 +1,77 @@
 ---
 import Base from "../layouts/Base.astro";
 import { getSiteData } from "../lib/site-data";
-import { fmtPct, href } from "../lib/format";
+import { fmtDate, fmtPct, href, ordinal } from "../lib/format";
 
 const { standings, events } = await getSiteData();
+const latest = events[events.length - 1]!;
+const podium = standings
+  .flatMap((p) => p.history.filter((h) => h.date === latest.date && h.rank <= 3).map((h) => ({ ...h, name: p.name, slug: p.slug })))
+  .sort((a, b) => a.rank - b.rank);
 
 // Columns: key, label, numeric?, default sort direction when first clicked.
 const cols = [
   { key: "pos", label: "#", num: true, dir: "ascending" },
   { key: "name", label: "Player", num: false, dir: "ascending" },
-  { key: "points", label: "Pts", num: true, dir: "descending" },
+  { key: "points", label: "Points", num: true, dir: "descending" },
   { key: "events", label: "Events", num: true, dir: "descending" },
   { key: "record", label: "W-L-D", num: true, dir: "descending" },
-  { key: "win", label: "Win %", num: true, dir: "descending" },
-  { key: "tie", label: "Tie %", num: true, dir: "descending" },
+  { key: "win", label: "Win rate", num: true, dir: "descending" },
+  { key: "tie", label: "Tie rate", num: true, dir: "descending" },
   { key: "avg", label: "Avg finish", num: true, dir: "ascending" },
   { key: "best", label: "Best", num: true, dir: "ascending" },
-  { key: "firsts", label: "Wins", num: true, dir: "descending" },
+  { key: "firsts", label: "Event wins", num: true, dir: "descending" },
 ] as const;
 ---
 
-<Base title="Standings · Locals">
-  <h1>Overall standings</h1>
-  <p class="lede">{standings.length} players across {events.length} weekly locals. Points are 3 per win and 1 per draw.</p>
+<Base title="Jesters Locals standings" section="standings">
+  <p class="eyebrow">Season to date · {events.length} weeks</p>
+  <h1 data-enter>Overall standings</h1>
+  <p class="lede">
+    {standings.length} players across every Jesters locals since {fmtDate(events[0]!.date)}. Three points a win, one a draw.
+  </p>
 
+  <section class="latest" aria-labelledby="latest-h">
+    <div class="latest-head">
+      <h2 id="latest-h">Latest locals</h2>
+      <a class="mono" href={href(`/events/${latest.date}/`)}>{fmtDate(latest.date)} · {latest.entrants} players</a>
+    </div>
+    <ol class="podium">
+      {
+        podium.map((p) => (
+          <li class:list={["place", `place-${p.rank}`]}>
+            <span class="place-rank">{ordinal(p.rank)}</span>
+            <a class="place-name" href={href(`/players/${p.slug}/`)}>
+              {p.name}
+            </a>
+            <span class="mono muted">
+              {p.wins}-{p.losses}-{p.draws}
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <h2 id="table-h">All players</h2>
   <div class="toolbar">
     <label class="field">
       Find a player
-      <input id="filter" type="search" placeholder="e.g. Oli D" autocomplete="off" />
+      <input id="filter" type="search" placeholder="Name" autocomplete="off" />
     </label>
     <label class="field">
-      Minimum events
+      Played at least
       <select id="min-events">
-        <option value="1">Any</option>
-        <option value="3">3+</option>
-        <option value="5">5+</option>
-        <option value="10">10+</option>
+        <option value="1">Any number of events</option>
+        <option value="3">3 events</option>
+        <option value="5">5 events</option>
+        <option value="10">10 events</option>
       </select>
     </label>
   </div>
 
-  <div class="card table-scroll">
-    <table id="standings">
+  <div class="table-frame">
+    <table id="standings" aria-labelledby="table-h">
       <thead>
         <tr>
           {
@@ -74,8 +104,8 @@ const cols = [
               data-best={p.bestFinish}
               data-firsts={p.firsts}
             >
-              <td class="num muted">{i + 1}</td>
-              <td class="sticky">
+              <td class:list={["num pos", { "is-podium": i < 3 }]}>{i + 1}</td>
+              <td class="sticky player">
                 <a href={href(`/players/${p.slug}/`)}>{p.name}</a>
               </td>
               <td class="num">{p.points}</td>
@@ -83,19 +113,113 @@ const cols = [
               <td class="num">
                 {p.wins}-{p.losses}-{p.draws}
               </td>
-              <td class="num">{fmtPct(p.winRate)}</td>
+              <td class="num">
+                <span class="rate">
+                  <span class="bar" aria-hidden="true">
+                    <i style={`width:${(p.winRate * 100).toFixed(1)}%`} />
+                  </span>
+                  {fmtPct(p.winRate)}
+                </span>
+              </td>
               <td class="num">{fmtPct(p.tieRate)}</td>
               <td class="num">{p.averageFinish.toFixed(1)}</td>
-              <td class="num">{p.bestFinish}</td>
-              <td class="num">{p.firsts || "–"}</td>
+              <td class="num">{ordinal(p.bestFinish)}</td>
+              <td class="num">{p.firsts || <span class="muted">0</span>}</td>
             </tr>
           ))
         }
       </tbody>
     </table>
   </div>
-  <p id="empty" class="muted" hidden>No players match.</p>
+  <p id="empty" class="muted" hidden>No players match that search. Clear the name or lower the event count.</p>
 </Base>
+
+<style>
+  .latest {
+    margin-top: 48px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 22px 24px 24px;
+  }
+  .latest-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .latest-head h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .latest-head a {
+    color: var(--muted);
+    min-height: 24px;
+  }
+  .podium {
+    list-style: none;
+    margin: 20px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .place {
+    display: grid;
+    gap: 6px;
+    padding: 4px 20px;
+    border-left: 1px solid var(--line);
+  }
+  .place:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .place-rank {
+    font: 500 12px/1 var(--font-mono);
+    color: var(--faint);
+  }
+  .place-1 .place-rank {
+    color: var(--accent-soft);
+  }
+  .place-name {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    justify-self: start;
+  }
+  .place-1 .place-name {
+    font-size: 30px;
+  }
+  @media (max-width: 640px) {
+    .podium {
+      grid-template-columns: 1fr;
+    }
+    .place,
+    .place:first-child {
+      border-left: 0;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      grid-template-columns: 44px 1fr auto;
+      align-items: baseline;
+    }
+    .place:first-child {
+      border-top: 0;
+    }
+    .place-name,
+    .place-1 .place-name {
+      font-size: 22px;
+    }
+  }
+  h2#table-h {
+    margin-top: 64px;
+    margin-bottom: 0;
+  }
+  .toolbar {
+    margin-top: 20px;
+  }
+</style>
 
 <script>
   const table = document.getElementById("standings") as HTMLTableElement;

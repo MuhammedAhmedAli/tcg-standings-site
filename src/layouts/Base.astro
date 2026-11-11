@@ -6,8 +6,9 @@ import { fmtDate, href } from "../lib/format";
 interface Props {
   title: string;
   description?: string;
+  section?: "standings" | "events";
 }
-const { title, description = "Weekly locals standings and player stats." } = Astro.props;
+const { title, description = "Jesters weekly locals: overall standings, player records and every event's results.", section } = Astro.props;
 const { events } = await getSiteData();
 const last = events[events.length - 1];
 ---
@@ -19,24 +20,51 @@ const last = events[events.length - 1];
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#111111" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400..600&family=Figtree:wght@400..600&family=Martian+Mono:wght@400..500&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
+    <a class="skip" href="#main">Skip to content</a>
     <header class="site">
       <div class="wrap">
-        <a class="brand" href={href("/")}>Locals Standings</a>
-        <nav>
-          <a href={href("/")}>Standings</a>
-          <a href={href("/events/")}>Events</a>
+        <a class="brand" href={href("/")}><span class="brand-mark" aria-hidden="true">J</span>Jesters Locals</a>
+        <nav aria-label="Main">
+          <a href={href("/")} aria-current={section === "standings" ? "page" : undefined}>Standings</a>
+          <a href={href("/events/")} aria-current={section === "events" ? "page" : undefined}>Events</a>
         </nav>
       </div>
     </header>
-    <main class="wrap">
+    <main id="main" class="wrap">
       <slot />
     </main>
     <footer class="site">
       <div class="wrap">
-        {events.length} events{last && <> · latest {fmtDate(last.date)}</>}
+        <span>Jesters Locals · weekly results</span>
+        {last && <span class="mono">{events.length} events · last {fmtDate(last.date)}</span>}
       </div>
     </footer>
   </body>
 </html>
+
+<style is:global>
+  /* The page heading enters once on load. */
+  [data-enter] {
+    animation: enter 0.6s var(--ease) both;
+  }
+  [data-enter] + * {
+    animation: enter 0.6s 0.08s var(--ease) both;
+  }
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+</style>

@@ -16,38 +16,37 @@ const pos = position.get(player.name)!;
 const history = [...player.history].reverse();
 ---
 
-<Base title={`${player.name} · Locals`} description={`${player.name}: ${player.events} events, ${fmtPct(player.winRate)} win rate.`}>
-  <p class="muted" style="margin:0 0 8px"><a href={href("/")}>← Standings</a></p>
-  <h1>{player.name}</h1>
-  <p class="lede">
-    {ordinal(pos)} of {standings.length} overall · {player.events} events from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}
-  </p>
+<Base title={`${player.name} · Jesters Locals`} description={`${player.name} at Jesters Locals: ${player.events} events, ${fmtPct(player.winRate)} win rate.`} section="standings">
+  <a class="back" href={href("/")}>← All standings</a>
+  <p class="eyebrow">{ordinal(pos)} of {standings.length} overall</p>
+  <h1 data-enter>{player.name}</h1>
+  <p class="lede">{player.events} events, from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}.</p>
 
-  <div class="tiles">
-    <div class="tile card">
+  <div class="stats">
+    <div class="stat">
       <div class="label">Win rate</div>
       <div class="value">{fmtPct(player.winRate)}</div>
       <div class="sub">{player.wins} of {player.matches} matches</div>
     </div>
-    <div class="tile card">
+    <div class="stat">
       <div class="label">Tie rate</div>
       <div class="value">{fmtPct(player.tieRate)}</div>
       <div class="sub">{player.draws} draws</div>
     </div>
-    <div class="tile card">
+    <div class="stat">
       <div class="label">Record</div>
       <div class="value">{player.wins}-{player.losses}-{player.draws}</div>
       <div class="sub">{player.points} points</div>
     </div>
-    <div class="tile card">
+    <div class="stat">
       <div class="label">Average finish</div>
       <div class="value">{player.averageFinish.toFixed(1)}</div>
-      <div class="sub">Best: {ordinal(player.bestFinish)}</div>
+      <div class="sub">Best {ordinal(player.bestFinish)}</div>
     </div>
-    <div class="tile card">
+    <div class="stat">
       <div class="label">Event wins</div>
       <div class="value">{player.firsts}</div>
-      <div class="sub">{player.events} events played</div>
+      <div class="sub">of {player.events} played</div>
     </div>
   </div>
 
@@ -55,7 +54,7 @@ const history = [...player.history].reverse();
   <PlacementChart history={player.history} />
 
   <h2>Event history</h2>
-  <div class="card table-scroll">
+  <div class="table-frame">
     <table>
       <thead>
         <tr>
@@ -73,7 +72,7 @@ const history = [...player.history].reverse();
               <td class="date">
                 <a href={href(`/events/${h.date}/`)}>{fmtDate(h.date)}</a>
               </td>
-              <td class="num">
+              <td class:list={["num pos", { "is-podium": h.rank <= 3 }]}>
                 {ordinal(h.rank)} <span class="muted">/ {h.entrants}</span>
               </td>
               <td class="num">
