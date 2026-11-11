@@ -241,6 +241,23 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
   #finishes[data-collapsed] .more {
     display: none;
   }
+  /* "Show all events": the extra rows fade in rather than appearing at once. */
+  #finishes .more {
+    transition: opacity 200ms var(--ease);
+  }
+  @starting-style {
+    #finishes:not([data-collapsed]) .more {
+      opacity: 0;
+    }
+  }
+  .more-cols,
+  .show-all {
+    transition: transform 160ms var(--ease);
+  }
+  .more-cols:active,
+  .show-all:active {
+    transform: scale(0.97);
+  }
   .more-cols {
     display: none;
   }
@@ -283,6 +300,7 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     font: inherit;
     font-size: 14px;
     cursor: pointer;
+    transition: background-color 0.15s, transform 160ms var(--ease);
   }
   .show-all:hover {
     background: var(--surface-2);

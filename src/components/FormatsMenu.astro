@@ -60,7 +60,10 @@ const latest = formats[formats.length - 1];
     font-size: 15px;
     color: var(--muted);
     border-radius: 8px;
-    transition: color 0.15s, background-color 0.15s;
+    transition: color 0.15s, background-color 0.15s, transform 160ms var(--ease);
+  }
+  .fmenu summary:active {
+    transform: scale(0.97);
   }
   .fmenu summary::-webkit-details-marker {
     display: none;
@@ -92,6 +95,15 @@ const latest = formats[formats.length - 1];
     border: 1px solid var(--line-strong);
     border-radius: 10px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    /* Opens out of the Formats toggle; closing is instant. */
+    transform-origin: top right;
+    transition: opacity 150ms var(--ease), transform 150ms var(--ease);
+  }
+  @starting-style {
+    .fmenu[open] .fmenu-panel {
+      opacity: 0;
+      transform: scale(0.97) translateY(-4px);
+    }
   }
   .fmenu-block + .fmenu-block {
     margin-top: 4px;
@@ -164,6 +176,7 @@ const latest = formats[formats.length - 1];
       left: 16px;
       right: 16px;
       width: auto;
+      transform-origin: top center;
     }
   }
 </style>

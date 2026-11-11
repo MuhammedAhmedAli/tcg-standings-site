@@ -152,7 +152,10 @@ const cols = [
     font: inherit;
     font-size: 15px;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition: border-color 0.15s, color 0.15s, transform 160ms var(--ease);
+  }
+  .more-stats:active {
+    transform: scale(0.97);
   }
   .more-stats:hover {
     border-color: var(--faint);
