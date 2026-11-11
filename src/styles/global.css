@@ -291,6 +291,14 @@ td.player {
 td.player a {
   font-weight: 500;
 }
+/* Points decide the table, so they read first; supporting counts sit a step back. */
+td.c-points {
+  font-weight: 500;
+  color: var(--ink);
+}
+td:is(.c-owp, .c-oowp, .c-events, .c-record, .c-tie, .c-avg, .c-best) {
+  color: var(--muted);
+}
 
 /* Sortable headers */
 th button {
@@ -378,13 +386,32 @@ th[aria-sort="descending"] button::after {
   font: inherit;
   font-size: 16px;
   color: var(--ink);
-  background: var(--surface);
+  background-color: var(--surface);
   border: 1px solid var(--line-strong);
   border-radius: 8px;
-  padding: 10px 12px;
-  min-height: 44px;
-  min-width: 220px;
+  box-sizing: border-box;
+  height: 44px;
+  padding: 0 12px;
+  min-width: 200px;
   transition: border-color 0.15s;
+}
+/* Every select gets the same chevron, so the "Showing" and "Played at least" pickers match. */
+.field select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%23a3a3a3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+.field option,
+.field optgroup {
+  background: var(--surface);
+  color: var(--ink);
+}
+.field-min select {
+  min-width: 150px;
 }
 .field input:hover,
 .field select:hover {
@@ -394,6 +421,10 @@ th[aria-sort="descending"] button::after {
 .field select:focus {
   outline: none;
   border-color: var(--accent);
+}
+.field select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 @media (max-width: 600px) {
   .field,

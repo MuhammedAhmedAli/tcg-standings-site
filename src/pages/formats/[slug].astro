@@ -29,8 +29,9 @@ const current = format.until === null;
   <ScopeStats summary={format.summary} overall={overall} newPlayers={format.newPlayers} />
 
   <h2 id="table-h">Players in {format.name}</h2>
-  <FormatPicker current={format.slug} />
-  <StandingsTable standings={format.standings} labelledby="table-h" movement={format.movement} />
+  <StandingsTable standings={format.standings} labelledby="table-h" movement={format.movement}>
+    <FormatPicker current={format.slug} slot="scope" />
+  </StandingsTable>
 </Base>
 
 <style>

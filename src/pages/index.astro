@@ -45,8 +45,9 @@ const podium = standings
   </section>
 
   <h2 id="table-h">All players</h2>
-  <FormatPicker current={null} />
-  <StandingsTable standings={standings} labelledby="table-h" movement={movement} />
+  <StandingsTable standings={standings} labelledby="table-h" movement={movement}>
+    <FormatPicker current={null} slot="scope" />
+  </StandingsTable>
 
   {
     formats.length > 0 && (
