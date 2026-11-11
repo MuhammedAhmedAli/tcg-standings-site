@@ -4,45 +4,111 @@ import { getSiteData } from "../lib/site-data";
 import StandingsTable from "../components/StandingsTable.astro";
 import FormatPicker from "../components/FormatPicker.astro";
 import ScopeStats from "../components/ScopeStats.astro";
+import Move from "../components/Move.astro";
 import { fmtDate, fmtPct, href, ordinal } from "../lib/format";
 
-const { standings, events, summary, formats, movement } = await getSiteData();
+const { standings, events, summary, formats, movement, position } = await getSiteData();
 const latest = events[events.length - 1]!;
-const podium = standings
-  .flatMap((p) => p.history.filter((h) => h.date === latest.date && h.rank <= 3).map((h) => ({ ...h, name: p.name, slug: p.slug })))
+const topFour = standings
+  .flatMap((p) => p.history.filter((h) => h.date === latest.date && h.rank <= 4).map((h) => ({ ...h, name: p.name, slug: p.slug })))
   .sort((a, b) => a.rank - b.rank);
+const [winner, ...chasers] = topFour;
+const winnerWins = winner ? (standings.find((p) => p.name === winner.name)?.firsts ?? 1) : 0;
+
+const leader = standings[0];
+const second = standings[1];
+const lead = leader && second ? leader.points - second.points : null;
 ---
 
 <Base title="Jesters Locals standings" section="standings">
-  <p class="eyebrow">Season to date · {events.length} weeks</p>
-  <h1 data-enter>Overall standings</h1>
-  <p class="lede">
-    {standings.length} players across every Jesters locals since {fmtDate(events[0]!.date)}. Three points a win, one a draw; level points are split by average OWP, then OOWP.
-  </p>
-
-  <ScopeStats summary={summary} />
-
-  <section class="latest" aria-labelledby="latest-h">
-    <div class="latest-head">
-      <h2 id="latest-h">Latest locals</h2>
-      <a class="mono" href={href(`/events/${latest.date}/`)}>{fmtDate(latest.date)} · {latest.entrants} players</a>
+  <section class="hero" aria-label="Season overview">
+    <div class="hero-main">
+      <p class="eyebrow">Season to date · {events.length} weeks</p>
+      <h1 data-enter>Overall standings</h1>
+      <p class="lede">
+        {standings.length} players across every Jesters locals since {fmtDate(events[0]!.date)}. Three points a win, one a draw; level points are split by average OWP, then OOWP.
+      </p>
+      <ScopeStats summary={summary} strip />
     </div>
-    <ol class="podium">
-      {
-        podium.map((p) => (
-          <li class:list={["place", `place-${p.rank}`]}>
-            <span class="place-rank">{ordinal(p.rank)}</span>
-            <a class="place-name" href={href(`/players/${p.slug}/`)}>
-              {p.name}
-            </a>
-            <span class="mono muted">
-              {p.wins}-{p.losses}-{p.draws}
-            </span>
-          </li>
-        ))
-      }
-    </ol>
+    {
+      leader && (
+        <aside class="leader" aria-labelledby="leader-h">
+          <p class="leader-k" id="leader-h">Leading the season</p>
+          <a class="leader-name" href={href(`/players/${leader.slug}/`)}>
+            {leader.name}
+          </a>
+          <p class="leader-meta">
+            {leader.wins}-{leader.losses}-{leader.draws} · {fmtPct(leader.winRate)} win rate · {leader.events} locals
+          </p>
+          <p class="leader-pts">
+            <span class="leader-num">{leader.points}</span> points
+          </p>
+          {second && lead !== null && (
+            <p class="leader-gap">
+              {lead > 0 ? (
+                <>
+                  <b>+{lead}</b> over <a href={href(`/players/${second.slug}/`)}>{second.name}</a> in 2nd
+                </>
+              ) : (
+                <>
+                  Level with <a href={href(`/players/${second.slug}/`)}>{second.name}</a>, ahead on tiebreaks
+                </>
+              )}
+            </p>
+          )}
+        </aside>
+      )
+    }
   </section>
+
+  {
+    winner && (
+      <section class="latest" aria-labelledby="latest-h">
+        <div class="latest-head">
+          <h2 id="latest-h">Latest locals</h2>
+          <a href={href(`/events/${latest.date}/`)}>{fmtDate(latest.date)} · {latest.entrants} players</a>
+        </div>
+        <div class="latest-body">
+          <div class="winner">
+            <span class="place-rank">1st</span>
+            <a class="winner-name" href={href(`/players/${winner.slug}/`)}>
+              {winner.name}
+            </a>
+            <span class="winner-note">{winnerWins === 1 ? "First locals win" : `${ordinal(winnerWins)} locals win`}</span>
+            <span class="winner-meta">
+              <span class="rec">
+                {winner.wins}-{winner.losses}-{winner.draws}
+              </span>
+              <span>
+                Now {ordinal(position.get(winner.name)!)} overall
+                {movement && <Move delta={movement.get(winner.name)} />}
+              </span>
+            </span>
+          </div>
+          <ol class="chasers">
+            {chasers.map((p) => (
+              <li>
+                <span class="place-rank">{ordinal(p.rank)}</span>
+                <a class="chaser-name" href={href(`/players/${p.slug}/`)}>
+                  {p.name}
+                </a>
+                <span class="rec">
+                  {p.wins}-{p.losses}-{p.draws}
+                </span>
+                <span class="chaser-pos">
+                  {ordinal(position.get(p.name)!)} overall
+                  {movement && <Move delta={movement.get(p.name)} />}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <a class="latest-all" href={href(`/events/${latest.date}/`)}>
+          Full results for all {latest.entrants} players →
+        </a>
+      </section>
+    )
+  }
 
   <h2 id="table-h">All players</h2>
   <StandingsTable standings={standings} labelledby="table-h" movement={movement}>
@@ -87,12 +153,132 @@ const podium = standings
 </Base>
 
 <style>
+  /* Hero: title and stat line on the left, the season leader on the right. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 40px;
+    align-items: stretch;
+  }
+  .hero-main {
+    display: flex;
+    flex-direction: column;
+  }
+  .leader {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #3a322c;
+    border-radius: 16px;
+    padding: 28px 30px;
+    background:
+      radial-gradient(120% 90% at 85% 0%, rgb(196 171 151 / 0.26), rgb(160 134 114 / 0.07) 45%, transparent 70%),
+      linear-gradient(180deg, #1f1c1a, #161514);
+  }
+  .leader::after {
+    content: "1";
+    position: absolute;
+    z-index: -1;
+    right: 24px;
+    bottom: -36px;
+    font: 600 240px/1 var(--font-display);
+    letter-spacing: -0.05em;
+    color: rgb(196 171 151 / 0.07);
+    pointer-events: none;
+  }
+  .leader p {
+    margin: 0;
+  }
+  .leader-k {
+    font: 500 12px/1 var(--font-data);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-soft);
+  }
+  .leader-name {
+    justify-self: start;
+    align-self: start;
+    margin-top: 14px;
+    font: 400 48px/1.05 var(--font-display);
+    letter-spacing: -0.035em;
+  }
+  .leader-meta {
+    margin-top: 8px !important;
+    color: var(--muted);
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+  .leader-pts {
+    margin-top: auto !important;
+    padding-top: 24px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: var(--muted);
+  }
+  .leader-num {
+    font: 500 64px/1 var(--font-display);
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .leader-gap {
+    align-self: start;
+    margin-top: 16px !important;
+    font-size: 14px;
+    color: var(--muted);
+    border: 1px solid #3a322c;
+    border-radius: 999px;
+    padding: 5px 12px;
+    background: rgb(0 0 0 / 0.25);
+  }
+  .leader-gap b {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .leader-gap a {
+    color: var(--ink);
+  }
+  @media (max-width: 860px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .leader {
+      padding: 20px 20px 18px;
+    }
+    .leader::after {
+      font-size: 170px;
+      bottom: -26px;
+      right: 16px;
+    }
+    .leader-name {
+      font-size: 34px;
+      margin-top: 10px;
+    }
+    .leader-meta {
+      font-size: 14px;
+    }
+    .leader-pts {
+      padding-top: 16px;
+    }
+    .leader-num {
+      font-size: 44px;
+    }
+    .leader-gap {
+      margin-top: 12px !important;
+    }
+  }
+
+  /* Latest locals: the winner on the left, 2nd to 4th as a ranked list. */
   .latest {
     margin-top: 48px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
-    padding: 22px 24px 24px;
+    padding: 22px 24px 0;
   }
   .latest-head {
     display: flex;
@@ -107,75 +293,139 @@ const podium = standings
   }
   .latest-head a {
     color: var(--muted);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
     min-height: 24px;
   }
-  .podium {
-    list-style: none;
-    margin: 20px 0 0;
-    padding: 0;
+  .latest-body {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-  }
-  .place {
-    display: grid;
-    gap: 6px;
-    padding: 4px 20px;
-    border-left: 1px solid var(--line);
-  }
-  .place:first-child {
-    border-left: 0;
-    padding-left: 0;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 32px;
+    margin-top: 18px;
+    padding-bottom: 20px;
   }
   .place-rank {
     font: 500 12px/1 var(--font-data);
     color: var(--faint);
+    font-variant-numeric: tabular-nums;
   }
-  .place-1 .place-rank {
+  .winner {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 32px;
+    border-right: 1px solid var(--line);
+  }
+  .winner .place-rank {
     color: var(--accent-soft);
   }
-  .place-name {
-    font-family: var(--font-display);
-    font-size: 26px;
-    letter-spacing: -0.03em;
-    line-height: 1.15;
+  .winner-name {
+    align-self: start;
+    font: 400 40px/1.05 var(--font-display);
+    letter-spacing: -0.035em;
+  }
+  .winner-note {
+    align-self: start;
+    font-size: 13px;
+    color: var(--accent-soft);
+    border: 1px solid #4a3f37;
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+  .winner-meta {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .rec {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .chasers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .chasers li {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto 128px;
+    align-items: baseline;
+    gap: 12px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+  }
+  .chasers li:first-child {
+    border-top: 0;
+    padding-top: 2px;
+  }
+  .chaser-name {
     justify-self: start;
+    font: 400 20px/1.2 var(--font-display);
+    letter-spacing: -0.02em;
   }
-  .place-1 .place-name {
-    font-size: 30px;
+  .chaser-pos {
+    text-align: right;
+    color: var(--faint);
+    font-size: 13px;
+    white-space: nowrap;
   }
-  @media (max-width: 640px) {
-    .podium {
-      grid-template-columns: 1fr;
-    }
-    .place,
-    .place:first-child {
-      border-left: 0;
-      padding: 12px 0;
-      border-top: 1px solid var(--line);
-      grid-template-columns: 44px 1fr auto;
-      align-items: baseline;
-    }
-    .place:first-child {
-      border-top: 0;
-    }
-    .place-name,
-    .place-1 .place-name {
-      font-size: 19px;
-    }
+  .latest-all {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0 -24px;
+    padding: 0 24px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 14px;
+    background: none;
+  }
+  .latest-all:hover {
+    color: var(--ink);
+  }
+  @media (max-width: 760px) {
     .latest {
       margin-top: 24px;
-      padding: 16px 16px 8px;
-    }
-    .podium {
-      margin-top: 8px;
-    }
-    .place,
-    .place:first-child {
-      padding: 9px 0;
+      padding: 16px 16px 0;
     }
     .latest-head h2 {
       font-size: 16px;
+    }
+    .latest-body {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+      padding-bottom: 12px;
+    }
+    .winner {
+      padding: 0 0 14px;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .winner-name {
+      font-size: 30px;
+    }
+    .chasers li {
+      grid-template-columns: 32px minmax(0, 1fr) auto;
+      padding: 9px 0;
+    }
+    .chasers li:first-child {
+      padding-top: 0;
+    }
+    .chaser-name {
+      font-size: 17px;
+    }
+    .chaser-pos {
+      grid-column: 2 / -1;
+      text-align: left;
+      margin-top: -6px;
+    }
+    .latest-all {
+      margin: 0 -16px;
+      padding: 0 16px;
     }
   }
   h2#table-h {
