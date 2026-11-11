@@ -38,3 +38,10 @@ npm run data:check -- path/to/export.csv   # validate a local export
 ```
 
 `SHEET_CSV_URL` / `SHEET_CSV_FILE` override the data source.
+
+## Deploying
+
+`.github/workflows/deploy.yml` builds from the live sheet and publishes to GitHub Pages on every push
+to `main`, every two hours, and on demand (Actions → Deploy → Run workflow). One-time setup:
+Settings → Pages → Source: **GitHub Actions**. The site is then at
+`https://muhammedahmedali.github.io/tcg-standings-site/`.
