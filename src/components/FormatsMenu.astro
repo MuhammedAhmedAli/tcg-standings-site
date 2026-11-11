@@ -10,6 +10,8 @@ interface Props {
 const { current } = Astro.props;
 const { formats } = await getSiteData();
 const blocks = groupByBlock(formats);
+// The format holding the latest locals (a newer format with no events yet is not listed).
+const latest = formats[formats.length - 1];
 ---
 
 {
@@ -30,7 +32,7 @@ const blocks = groupByBlock(formats);
                 <li>
                   <a href={href(`/formats/${f.slug}/`)} aria-current={f.slug === current ? "page" : undefined}>
                     <span>{f.name}</span>
-                    {f.until === null && <span class="fmenu-tag">Current</span>}
+                    {f === latest && <span class="fmenu-tag">Current</span>}
                   </a>
                 </li>
               ))}

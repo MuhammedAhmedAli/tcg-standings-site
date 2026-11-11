@@ -11,6 +11,7 @@ const { current } = Astro.props;
 const { formats } = await getSiteData();
 // One compact select, whatever the number of formats: "All time", then each block's formats, newest first.
 const blocks = groupByBlock(formats);
+const latest = formats[formats.length - 1];
 ---
 
 {
@@ -27,7 +28,7 @@ const blocks = groupByBlock(formats);
               {b.formats.map((f) => (
                 <option value={href(`/formats/${f.slug}/`)} selected={f.slug === current}>
                   {f.name}
-                  {f.until === null ? " (current)" : ""}
+                  {f === latest ? " (current)" : ""}
                 </option>
               ))}
             </optgroup>
