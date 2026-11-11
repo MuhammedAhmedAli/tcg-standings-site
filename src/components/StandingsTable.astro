@@ -37,22 +37,26 @@ const cols = [
     <label class="field">
       Played at least
       <select id="min-events">
-        <option value="1">Any number of events</option>
+        <option value="1">Any</option>
         <option value="3">3 events</option>
         <option value="5">5 events</option>
         <option value="10">10 events</option>
       </select>
     </label>
+    <button type="button" id="more-stats" class="more-stats" aria-pressed="false" aria-controls="standings">More stats</button>
   </div>
+  <p id="rate-note" class="rate-note" hidden>
+    Sorted by a rate, so players with fewer than 3 events are hidden. <button type="button" id="show-everyone">Show everyone</button>
+  </p>
 
-  <div class="table-frame">
+  <div class="table-frame compact" id="standings-frame">
     <table id="standings" aria-labelledby={labelledby}>
       <thead>
         <tr>
           {
             cols.map((c) => (
               <th
-                class:list={[{ num: c.num, sticky: c.key === "name" }]}
+                class:list={[`c-${c.key}`, { num: c.num, sticky: c.key === "name" }]}
                 data-key={c.key}
                 data-dir={c.dir}
                 aria-sort={c.key === "pos" ? "ascending" : undefined}
@@ -80,17 +84,17 @@ const cols = [
               data-best={p.bestFinish}
               data-firsts={p.firsts}
             >
-              <td class:list={["num pos", { "is-podium": i < 3 }]}>{i + 1}</td>
-              <td class="sticky player">
+              <td class:list={["num pos c-pos", { "is-podium": i < 3 }]}>{i + 1}</td>
+              <td class="sticky player c-name">
                 <a href={href(`/players/${p.slug}/`)}>{p.name}</a>
                 {movement && <Move delta={movement.get(p.name)} />}
               </td>
-              <td class="num">{p.points}</td>
-              <td class="num">{p.events}</td>
-              <td class="num">
+              <td class="num c-points">{p.points}</td>
+              <td class="num c-events">{p.events}</td>
+              <td class="num c-record">
                 {p.wins}-{p.losses}-{p.draws}
               </td>
-              <td class="num">
+              <td class="num c-win">
                 <span class="rate">
                   <span class="bar" aria-hidden="true">
                     <i style={`width:${(p.winRate * 100).toFixed(1)}%`} />
@@ -98,11 +102,11 @@ const cols = [
                   {fmtPct(p.winRate)}
                 </span>
               </td>
-              <td class="num">{fmtPct(p.tieRate)}</td>
-              <td class="num" title={`Average place ${p.averageFinish.toFixed(1)}`}>
+              <td class="num c-tie">{fmtPct(p.tieRate)}</td>
+              <td class="num c-avg" title={`Average place ${p.averageFinish.toFixed(1)}`}>
                 {fmtTop(p.averagePercentile)}
               </td>
-              <td class="num">
+              <td class="num c-form">
                 <span class="form" aria-label={`Last ${Math.min(FORM, p.history.length)} finishes, oldest first`}>
                   {p.history.slice(-FORM).map((h) => (
                     <span
@@ -114,8 +118,8 @@ const cols = [
                   ))}
                 </span>
               </td>
-              <td class="num">{ordinal(p.bestFinish)}</td>
-              <td class="num">{p.firsts || <span class="muted">0</span>}</td>
+              <td class="num c-best">{ordinal(p.bestFinish)}</td>
+              <td class="num c-firsts">{p.firsts || <span class="muted">0</span>}</td>
             </tr>
           ))
         }
@@ -127,6 +131,72 @@ const cols = [
 <style>
   .toolbar {
     margin-top: 20px;
+  }
+  .more-stats {
+    display: none;
+  }
+  .rate-note {
+    margin: -4px 0 12px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .rate-note button {
+    all: unset;
+    cursor: pointer;
+    color: var(--accent-soft);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .rate-note button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /*
+   * Phones: the table opens on rank, name, points and win rate, so it fits without sideways
+   * scrolling. "More stats" brings back every column.
+   */
+  @media (max-width: 600px) {
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+    .toolbar :global(.field) {
+      width: auto;
+    }
+    .toolbar :global(.field:first-child) {
+      grid-column: 1 / -1;
+    }
+    .toolbar :global(.field select) {
+      width: auto;
+      min-width: 0;
+    }
+    .more-stats {
+      display: inline-flex;
+      align-items: center;
+      align-self: end;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .more-stats[aria-pressed="true"] {
+      border-color: var(--accent);
+      color: var(--accent-soft);
+    }
+    .compact :global(:is(.c-events, .c-record, .c-tie, .c-avg, .c-form, .c-best, .c-firsts)) {
+      display: none;
+    }
+    .compact :global(.rate) {
+      grid-template-columns: 36px auto;
+      gap: 8px;
+    }
   }
   .form {
     display: inline-flex;
@@ -172,7 +242,56 @@ const cols = [
     empty.hidden = shown > 0;
   }
   filter.addEventListener("input", applyFilter);
-  minEvents.addEventListener("change", applyFilter);
+
+  // Rates from one or two events swamp the top of a rate sort (one 3-0 night = 100%), so sorting
+  // by a rate raises "Played at least" to 3 until the reader changes it or sorts by something else.
+  const RATE_KEYS = new Set(["win", "tie", "avg", "form"]);
+  const RATE_MIN = "3";
+  const note = document.getElementById("rate-note")!;
+  let autoMin = false;
+  const setAutoMin = (on: boolean) => {
+    autoMin = on;
+    note.hidden = !on;
+  };
+  minEvents.addEventListener("change", () => {
+    setAutoMin(false);
+    applyFilter();
+  });
+  document.getElementById("show-everyone")!.addEventListener("click", () => {
+    minEvents.value = "1";
+    setAutoMin(false);
+    applyFilter();
+  });
+  const onSort = (key: string) => {
+    if (RATE_KEYS.has(key) && minEvents.value === "1") {
+      minEvents.value = RATE_MIN;
+      setAutoMin(true);
+      applyFilter();
+    } else if (!RATE_KEYS.has(key) && autoMin) {
+      minEvents.value = "1";
+      setAutoMin(false);
+      applyFilter();
+    }
+  };
+
+  // Phones: "More stats" shows every column. Remember the choice on this device.
+  const frame = document.getElementById("standings-frame")!;
+  const more = document.getElementById("more-stats")!;
+  const setMore = (on: boolean) => {
+    frame.classList.toggle("compact", !on);
+    more.setAttribute("aria-pressed", String(on));
+    more.textContent = on ? "Fewer stats" : "More stats";
+  };
+  try {
+    if (localStorage.getItem("standings-more") === "1") setMore(true);
+  } catch {}
+  more.addEventListener("click", () => {
+    const on = more.getAttribute("aria-pressed") !== "true";
+    setMore(on);
+    try {
+      localStorage.setItem("standings-more", on ? "1" : "0");
+    } catch {}
+  });
 
   for (const th of Array.from(table.tHead!.rows[0]!.cells)) {
     th.querySelector("button")!.addEventListener("click", () => {
@@ -188,6 +307,7 @@ const cols = [
         return cmp * sign || Number(a.dataset.pos) - Number(b.dataset.pos);
       });
       tbody.append(...sorted);
+      onSort(key);
     });
   }
 </script>

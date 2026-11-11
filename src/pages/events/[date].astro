@@ -10,7 +10,10 @@ export async function getStaticPaths() {
 }
 
 const { event } = Astro.props as { event: EventSummary };
-const { standings, formatOf } = await getSiteData();
+const { standings, formatOf, events } = await getSiteData();
+const at = events.findIndex((e) => e.date === event.date);
+const prev = events[at - 1];
+const next = events[at + 1];
 const format = formatOf.get(event.date);
 
 // Rebuild this event's table from each player's history.
@@ -54,4 +57,48 @@ const results = standings
       </tbody>
     </table>
   </div>
+
+  <nav class="pager" aria-label="Other weeks">
+    {prev ? (
+      <a class="prev" href={href(`/events/${prev.date}/`)} rel="prev">
+        <span class="muted">← Previous week</span>
+        {fmtDate(prev.date)}
+      </a>
+    ) : <span />}
+    {next && (
+      <a class="next" href={href(`/events/${next.date}/`)} rel="next">
+        <span class="muted">Next week →</span>
+        {fmtDate(next.date)}
+      </a>
+    )}
+  </nav>
 </Base>
+
+<style>
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .pager a {
+    display: grid;
+    gap: 2px;
+    min-height: 44px;
+    padding: 6px 0;
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    background: none;
+  }
+  .pager a:hover {
+    color: var(--accent-soft);
+  }
+  .pager .muted {
+    font: 400 13px/1.4 var(--font-text);
+    letter-spacing: 0;
+  }
+  .pager .next {
+    text-align: right;
+  }
+</style>
