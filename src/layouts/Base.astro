@@ -5,16 +5,24 @@ import { fmtDate, href } from "../lib/format";
 import PlayerSearch from "../components/PlayerSearch.astro";
 import FormatsMenu from "../components/FormatsMenu.astro";
 // Self-hosted, latin-only fonts: served from the same origin as the page, so no Google Fonts round trips.
-import soraUrl from "@fontsource-variable/sora/files/sora-latin-wght-normal.woff2?url";
-import figtreeUrl from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
-import mono400Url from "@fontsource/martian-mono/files/martian-mono-latin-400-normal.woff2?url";
-import mono500Url from "@fontsource/martian-mono/files/martian-mono-latin-500-normal.woff2?url";
+// Pairing chosen with UI UX Pro Max ("Sports/Fitness"): Barlow Condensed for headings, Barlow for text and numbers.
+import text400Url from "@fontsource/barlow/files/barlow-latin-400-normal.woff2?url";
+import text500Url from "@fontsource/barlow/files/barlow-latin-500-normal.woff2?url";
+import text600Url from "@fontsource/barlow/files/barlow-latin-600-normal.woff2?url";
+import text700Url from "@fontsource/barlow/files/barlow-latin-700-normal.woff2?url";
+import display500Url from "@fontsource/barlow-condensed/files/barlow-condensed-latin-500-normal.woff2?url";
+import display600Url from "@fontsource/barlow-condensed/files/barlow-condensed-latin-600-normal.woff2?url";
 
-const fontFaces = `
-@font-face{font-family:"Sora";font-style:normal;font-display:swap;font-weight:100 800;src:url(${soraUrl}) format("woff2-variations")}
-@font-face{font-family:"Figtree";font-style:normal;font-display:swap;font-weight:300 900;src:url(${figtreeUrl}) format("woff2-variations")}
-@font-face{font-family:"Martian Mono";font-style:normal;font-display:swap;font-weight:400;src:url(${mono400Url}) format("woff2")}
-@font-face{font-family:"Martian Mono";font-style:normal;font-display:swap;font-weight:500;src:url(${mono500Url}) format("woff2")}`;
+const face = (family: string, weight: number, url: string) =>
+  `@font-face{font-family:"${family}";font-style:normal;font-display:swap;font-weight:${weight};src:url(${url}) format("woff2")}`;
+const fontFaces = [
+  face("Barlow", 400, text400Url),
+  face("Barlow", 500, text500Url),
+  face("Barlow", 600, text600Url),
+  face("Barlow", 700, text700Url),
+  face("Barlow Condensed", 500, display500Url),
+  face("Barlow Condensed", 600, display600Url),
+].join("");
 
 interface Props {
   title: string;
@@ -38,9 +46,8 @@ const last = events[events.length - 1];
     <meta name="theme-color" content="#111111" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <link rel="preload" href={soraUrl} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={figtreeUrl} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={mono400Url} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={text400Url} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={display500Url} as="font" type="font/woff2" crossorigin />
     <style set:html={fontFaces}></style>
   </head>
   <body>
