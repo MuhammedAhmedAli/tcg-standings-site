@@ -1,13 +1,17 @@
 ---
-import { fmtPct, href, ordinal } from "../lib/format";
+import { fmtPct, fmtShortDate, fmtTop, href, ordinal } from "../lib/format";
 import type { PlayerStats } from "../data";
+import Move from "./Move.astro";
 
 interface Props {
   standings: PlayerStats[];
   /** id of the heading that labels the table */
   labelledby: string;
+  /** Places moved at the latest event (positive = climbed, null = new). Omit to hide movement. */
+  movement?: Map<string, number | null>;
 }
-const { standings, labelledby } = Astro.props;
+const { standings, labelledby, movement } = Astro.props;
+const FORM = 5;
 
 // Columns: key, label, numeric?, default sort direction when first clicked.
 const cols = [
@@ -19,6 +23,7 @@ const cols = [
   { key: "win", label: "Win rate", num: true, dir: "descending" },
   { key: "tie", label: "Tie rate", num: true, dir: "descending" },
   { key: "avg", label: "Avg finish", num: true, dir: "ascending" },
+  { key: "form", label: "Form", num: true, dir: "ascending" },
   { key: "best", label: "Best", num: true, dir: "ascending" },
   { key: "firsts", label: "Locals won", num: true, dir: "descending" },
 ] as const;
@@ -70,13 +75,15 @@ const cols = [
               data-record={p.wins * 1e6 + p.draws * 1e3 - p.losses}
               data-win={p.winRate}
               data-tie={p.tieRate}
-              data-avg={p.averageFinish}
+              data-avg={p.averagePercentile}
+              data-form={p.history.slice(-FORM).reduce((a, h) => a + h.rank / h.entrants, 0) / Math.min(FORM, p.history.length)}
               data-best={p.bestFinish}
               data-firsts={p.firsts}
             >
               <td class:list={["num pos", { "is-podium": i < 3 }]}>{i + 1}</td>
               <td class="sticky player">
                 <a href={href(`/players/${p.slug}/`)}>{p.name}</a>
+                {movement && <Move delta={movement.get(p.name)} />}
               </td>
               <td class="num">{p.points}</td>
               <td class="num">{p.events}</td>
@@ -92,7 +99,21 @@ const cols = [
                 </span>
               </td>
               <td class="num">{fmtPct(p.tieRate)}</td>
-              <td class="num">{p.averageFinish.toFixed(1)}</td>
+              <td class="num" title={`Average place ${p.averageFinish.toFixed(1)}`}>
+                {fmtTop(p.averagePercentile)}
+              </td>
+              <td class="num">
+                <span class="form" aria-label={`Last ${Math.min(FORM, p.history.length)} finishes, oldest first`}>
+                  {p.history.slice(-FORM).map((h) => (
+                    <span
+                      class:list={["chip", { top: h.rank / h.entrants <= 0.25, podium: h.rank <= 3 }]}
+                      title={`${fmtShortDate(h.date)}: ${ordinal(h.rank)} of ${h.entrants}`}
+                    >
+                      {h.rank}
+                    </span>
+                  ))}
+                </span>
+              </td>
               <td class="num">{ordinal(p.bestFinish)}</td>
               <td class="num">{p.firsts || <span class="muted">0</span>}</td>
             </tr>
@@ -106,6 +127,28 @@ const cols = [
 <style>
   .toolbar {
     margin-top: 20px;
+  }
+  .form {
+    display: inline-flex;
+    gap: 4px;
+    justify-content: flex-end;
+  }
+  .chip {
+    min-width: 24px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+    color: var(--faint);
+    background: color-mix(in srgb, var(--line) 60%, transparent);
+  }
+  .chip.top {
+    color: var(--ink);
+  }
+  .chip.podium {
+    color: var(--accent-soft);
+    background: color-mix(in srgb, var(--accent-soft) 16%, transparent);
   }
 </style>
 

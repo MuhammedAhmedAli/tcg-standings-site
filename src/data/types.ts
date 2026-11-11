@@ -65,6 +65,8 @@ export interface PlayerStats {
   tieRate: number;
   bestFinish: number;
   averageFinish: number;
+  /** Mean of rank / entrants, 0–1; lower is better (0.1 = top 10% on average). */
+  averagePercentile: number;
   /** Event wins (rank 1). */
   firsts: number;
   firstEvent: string;
