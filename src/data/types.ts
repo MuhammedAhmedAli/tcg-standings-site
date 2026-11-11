@@ -78,3 +78,25 @@ export interface EventSummary {
   entrants: number;
   winner: string;
 }
+
+/** Headline numbers for a set of events (one format, or everything). */
+export interface ScopeSummary {
+  events: number;
+  /** Distinct players. */
+  players: number;
+  averageEntrants: number;
+  peakEntrants: number;
+  /** Draws summed over every player's record (each drawn match counts once per player). */
+  draws: number;
+  /** W + L + D summed over every player's record. */
+  results: number;
+  /** draws / results, 0–1. */
+  drawShare: number;
+  /** Entries that won every round of their event (early drops excluded). */
+  undefeated: number;
+  /** Player rows (entries) across all events. */
+  entries: number;
+  /** Player(s) with the most event wins; several if tied. */
+  topWinners: { name: string; slug: string }[];
+  topWins: number;
+}

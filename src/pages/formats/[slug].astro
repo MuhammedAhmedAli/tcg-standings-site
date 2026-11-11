@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import StandingsTable from "../../components/StandingsTable.astro";
 import FormatPicker from "../../components/FormatPicker.astro";
+import ScopeStats from "../../components/ScopeStats.astro";
 import { getSiteData, type FormatData } from "../../lib/site-data";
 import { fmtDate, href } from "../../lib/format";
 
@@ -11,6 +12,7 @@ export async function getStaticPaths() {
 }
 
 const { format } = Astro.props as { format: FormatData };
+const { summary: overall } = await getSiteData();
 const first = format.events[0]!;
 const last = format.events[format.events.length - 1]!;
 const current = format.until === null;
@@ -23,6 +25,8 @@ const current = format.until === null;
     {format.standings.length} players over {format.events.length} {format.events.length === 1 ? "week" : "weeks"}, since {format.name} became legal on {fmtDate(format.start)}.
     <a href={href(`/events/#${format.slug}`)}>See its events</a>.
   </p>
+
+  <ScopeStats summary={format.summary} overall={overall} newPlayers={format.newPlayers} />
 
   <h2 id="table-h">Players in {format.name}</h2>
   <FormatPicker current={format.slug} />

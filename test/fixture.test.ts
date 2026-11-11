@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { loadResults } from "../src/data/load";
-import { computeEvents, computePlayerStats, computeStandings } from "../src/data/stats";
+import { computeEvents, computePlayerStats, computeStandings, computeSummary } from "../src/data/stats";
 
 // Real export of the "Weekly_Input" tab, 8 Jan – 29 Oct 2026 (after Ali's 11 Nov clean-up).
 const FIXTURE = fileURLToPath(new URL("./fixtures/weekly-input.csv", import.meta.url));
@@ -58,4 +58,17 @@ test("standings are sorted by points and every player has a unique slug", () => 
   const s = computeStandings(rows);
   for (let i = 1; i < s.length; i++) assert.ok(s[i - 1]!.points >= s[i]!.points);
   assert.equal(new Set(s.map((p) => p.slug)).size, s.length);
+});
+
+test("summary: turnout, draw share and undefeated runs over the real export", () => {
+  const s = computeSummary(rows);
+  assert.equal(s.events, 42);
+  assert.equal(s.entries, 907);
+  assert.equal(s.players, computePlayerStats(rows).length);
+  assert.deepEqual([s.draws, s.results], [373, 2654]);
+  assert.ok(Math.abs(s.drawShare - 373 / 2654) < 1e-9);
+  assert.ok(Math.abs(s.averageEntrants - 907 / 42) < 1e-9);
+  assert.equal(s.peakEntrants, 35);
+  assert.equal(s.undefeated, 83);
+  assert.ok(s.topWinners.length > 0 && s.topWins >= 1);
 });
