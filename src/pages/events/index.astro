@@ -8,10 +8,11 @@ const slugOf = new Map(standings.map((p) => [p.name, p.slug]));
 const rows = [...events].reverse();
 ---
 
-<Base title="Events · Locals">
-  <h1>Events</h1>
-  <p class="lede">Every weekly locals, newest first.</p>
-  <div class="card table-scroll">
+<Base title="Events · Jesters Locals" section="events">
+  <p class="eyebrow">{events.length} weeks</p>
+  <h1 data-enter>Every locals</h1>
+  <p class="lede">Each week's winner and turnout, newest first. Open a date for the full results.</p>
+  <div class="table-frame" style="margin-top:40px">
     <table>
       <thead>
         <tr>
@@ -28,7 +29,7 @@ const rows = [...events].reverse();
                 <a href={href(`/events/${e.date}/`)}>{fmtDate(e.date)}</a>
               </td>
               <td class="num">{e.entrants}</td>
-              <td>
+              <td class="player">
                 <a href={href(`/players/${slugOf.get(e.winner)}/`)}>{e.winner}</a>
               </td>
             </tr>

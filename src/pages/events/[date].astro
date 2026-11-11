@@ -18,11 +18,12 @@ const results = standings
   .sort((a, b) => a.rank - b.rank);
 ---
 
-<Base title={`${fmtDate(event.date)} · Locals`}>
-  <p class="muted" style="margin:0 0 8px"><a href={href("/events/")}>← Events</a></p>
-  <h1>{fmtDate(event.date)}</h1>
-  <p class="lede">{event.entrants} players · won by {event.winner}</p>
-  <div class="card table-scroll">
+<Base title={`${fmtDate(event.date)} · Jesters Locals`} section="events">
+  <a class="back" href={href("/events/")}>← Every locals</a>
+  <p class="eyebrow">{event.entrants} players</p>
+  <h1 data-enter>{fmtDate(event.date)}</h1>
+  <p class="lede">Won by {event.winner}. Final standings in finishing order.</p>
+  <div class="table-frame" style="margin-top:40px">
     <table>
       <thead>
         <tr>
@@ -37,8 +38,8 @@ const results = standings
         {
           results.map((r) => (
             <tr>
-              <td class="num">{ordinal(r.rank)}</td>
-              <td>
+              <td class:list={["num pos", { "is-podium": r.rank <= 3 }]}>{ordinal(r.rank)}</td>
+              <td class="player">
                 <a href={href(`/players/${r.slug}/`)}>{r.name}</a>
               </td>
               <td class="num">

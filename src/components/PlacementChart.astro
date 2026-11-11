@@ -41,7 +41,7 @@ const points = history.map((h, i) => ({ ...h, cx: x(i), cy: y(h.rank) }));
 const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(" ");
 ---
 
-<figure class="chart card">
+<figure class="chart">
   <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Finishing position at each event, first place at the top">
     {
       yTicks.map((t) => (
@@ -79,6 +79,9 @@ const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toF
   .chart {
     position: relative;
     margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
     padding: 12px 8px 4px;
     overflow-x: auto;
   }
@@ -94,8 +97,9 @@ const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toF
     stroke-width: 1;
   }
   .axis {
-    fill: var(--text-3);
-    font-size: 11px;
+    fill: var(--faint);
+    font-family: var(--font-mono);
+    font-size: 10px;
     font-variant-numeric: tabular-nums;
   }
   .line {
@@ -123,8 +127,9 @@ const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toF
   .tip {
     position: absolute;
     pointer-events: none;
-    background: var(--text);
-    color: var(--surface);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.4;
     padding: 6px 8px;
