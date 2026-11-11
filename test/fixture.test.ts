@@ -54,6 +54,22 @@ test("event winners come from the first row of each week", () => {
   assert.equal(players.get("Ted B")!.firsts, 1);
 });
 
+test("level points are split by average OWP, then average OOWP", () => {
+  const s = computeStandings(rows);
+  const key = (v: number | null) => v ?? -1;
+  for (let i = 1; i < s.length; i++) {
+    const a = s[i - 1]!;
+    const b = s[i]!;
+    if (a.points !== b.points) continue;
+    assert.ok(key(a.owp) >= key(b.owp), `${a.name} before ${b.name}: OWP`);
+    if (key(a.owp) === key(b.owp)) assert.ok(key(a.oowp) >= key(b.oowp), `${a.name} before ${b.name}: OOWP`);
+  }
+  // Average of the sheet's per-event values, blanks ignored.
+  const p = players.get("Rick S")!;
+  const owps = p.history.map((h) => h.owp).filter((v): v is number => v != null);
+  assert.ok(Math.abs(p.owp! - owps.reduce((a, v) => a + v, 0) / owps.length) < 1e-9);
+});
+
 test("standings are sorted by points and every player has a unique slug", () => {
   const s = computeStandings(rows);
   for (let i = 1; i < s.length; i++) assert.ok(s[i - 1]!.points >= s[i]!.points);

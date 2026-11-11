@@ -37,6 +37,8 @@ export function computePlayerStats(rows: ResultRow[]): PlayerStats[] {
       draws,
       points: wins * 3 + draws,
       winRate: matches ? wins / matches : 0,
+      owp: mean(list.map((r) => r.owp)),
+      oowp: mean(list.map((r) => r.oowp)),
       tieRate: matches ? draws / matches : 0,
       bestFinish: Math.min(...list.map((r) => r.rank)),
       averageFinish: sum(list, (r) => r.rank) / list.length,
@@ -61,16 +63,25 @@ export function computePlayerStats(rows: ResultRow[]): PlayerStats[] {
   return out;
 }
 
+/** Mean of the recorded values, ignoring blanks; null when nothing is recorded. */
+function mean(values: (number | null)[]): number | null {
+  const got = values.filter((v): v is number => v != null);
+  return got.length ? got.reduce((a, v) => a + v, 0) / got.length : null;
+}
+
+/** Higher tiebreaker first; a player with no recorded value goes after everyone who has one. */
+const byTiebreaker = (a: number | null, b: number | null) => (b ?? -1) - (a ?? -1);
+
 /**
- * Overall standings: total points, then win rate, then events played, then name.
- * The site can re-sort by any column; this is just the default order.
+ * Overall standings: total points, then OWP, then OOWP (each the player's average across their
+ * events, from the sheet), then name. The site can re-sort by any column; this is the default order.
  */
 export function computeStandings(rows: ResultRow[]): PlayerStats[] {
   return computePlayerStats(rows).sort(
     (a, b) =>
       b.points - a.points ||
-      b.winRate - a.winRate ||
-      b.events - a.events ||
+      byTiebreaker(a.owp, b.owp) ||
+      byTiebreaker(a.oowp, b.oowp) ||
       a.name.localeCompare(b.name),
   );
 }

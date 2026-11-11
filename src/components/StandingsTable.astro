@@ -18,6 +18,8 @@ const cols = [
   { key: "pos", label: "#", num: true, dir: "ascending" },
   { key: "name", label: "Player", num: false, dir: "ascending" },
   { key: "points", label: "Points", num: true, dir: "descending" },
+  { key: "owp", label: "OWP", num: true, dir: "descending" },
+  { key: "oowp", label: "OOWP", num: true, dir: "descending" },
   { key: "events", label: "Events", num: true, dir: "descending" },
   { key: "record", label: "W-L-D", num: true, dir: "descending" },
   { key: "win", label: "Win rate", num: true, dir: "descending" },
@@ -76,6 +78,8 @@ const cols = [
               data-events={p.events}
               data-pos={i + 1}
               data-points={p.points}
+              data-owp={p.owp ?? -1}
+              data-oowp={p.oowp ?? -1}
               data-record={p.wins * 1e6 + p.draws * 1e3 - p.losses}
               data-win={p.winRate}
               data-tie={p.tieRate}
@@ -90,6 +94,8 @@ const cols = [
                 {movement && <Move delta={movement.get(p.name)} />}
               </td>
               <td class="num c-points">{p.points}</td>
+              <td class="num c-owp">{p.owp == null ? "–" : `${p.owp.toFixed(1)}%`}</td>
+              <td class="num c-oowp">{p.oowp == null ? "–" : `${p.oowp.toFixed(1)}%`}</td>
               <td class="num c-events">{p.events}</td>
               <td class="num c-record">
                 {p.wins}-{p.losses}-{p.draws}
@@ -190,7 +196,7 @@ const cols = [
       border-color: var(--accent);
       color: var(--accent-soft);
     }
-    .compact :global(:is(.c-events, .c-record, .c-tie, .c-avg, .c-form, .c-best, .c-firsts)) {
+    .compact :global(:is(.c-owp, .c-oowp, .c-events, .c-record, .c-tie, .c-avg, .c-form, .c-best, .c-firsts)) {
       display: none;
     }
     .compact :global(.rate) {

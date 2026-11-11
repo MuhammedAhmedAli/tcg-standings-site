@@ -61,6 +61,10 @@ export interface PlayerStats {
   points: number;
   /** wins / matches, 0–1. */
   winRate: number;
+  /** Mean of this player's per-event OWP from the sheet (percent, 0–100); null if none recorded. */
+  owp: number | null;
+  /** Mean of this player's per-event OOWP from the sheet (percent, 0–100); null if none recorded. */
+  oowp: number | null;
   /** draws / matches, 0–1. */
   tieRate: number;
   bestFinish: number;
