@@ -105,7 +105,7 @@ const cols = [
                   <span class="bar" aria-hidden="true">
                     <i style={`width:${(p.winRate * 100).toFixed(1)}%`} />
                   </span>
-                  {fmtPct(p.winRate)}
+                  <span class="val">{fmtPct(p.winRate)}</span>
                 </span>
               </td>
               <td class="num c-tie">{fmtPct(p.tieRate)}</td>
@@ -217,7 +217,7 @@ const cols = [
       display: none;
     }
     .compact :global(.rate) {
-      grid-template-columns: 36px auto;
+      grid-template-columns: 36px var(--rate-val-w);
       gap: 8px;
     }
   }
