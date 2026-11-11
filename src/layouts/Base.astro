@@ -5,24 +5,13 @@ import { fmtDate, href } from "../lib/format";
 import PlayerSearch from "../components/PlayerSearch.astro";
 import FormatsMenu from "../components/FormatsMenu.astro";
 // Self-hosted, latin-only fonts: served from the same origin as the page, so no Google Fonts round trips.
-// Pairing chosen with UI UX Pro Max ("Sports/Fitness"): Barlow Condensed for headings, Barlow for text and numbers.
-import text400Url from "@fontsource/barlow/files/barlow-latin-400-normal.woff2?url";
-import text500Url from "@fontsource/barlow/files/barlow-latin-500-normal.woff2?url";
-import text600Url from "@fontsource/barlow/files/barlow-latin-600-normal.woff2?url";
-import text700Url from "@fontsource/barlow/files/barlow-latin-700-normal.woff2?url";
-import display500Url from "@fontsource/barlow-condensed/files/barlow-condensed-latin-500-normal.woff2?url";
-import display600Url from "@fontsource/barlow-condensed/files/barlow-condensed-latin-600-normal.woff2?url";
+// Pairing picked with UI UX Pro Max: Space Grotesk for headings, Inter for text and numbers.
+import displayUrl from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
+import textUrl from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 
-const face = (family: string, weight: number, url: string) =>
-  `@font-face{font-family:"${family}";font-style:normal;font-display:swap;font-weight:${weight};src:url(${url}) format("woff2")}`;
-const fontFaces = [
-  face("Barlow", 400, text400Url),
-  face("Barlow", 500, text500Url),
-  face("Barlow", 600, text600Url),
-  face("Barlow", 700, text700Url),
-  face("Barlow Condensed", 500, display500Url),
-  face("Barlow Condensed", 600, display600Url),
-].join("");
+const fontFaces = `
+@font-face{font-family:"Space Grotesk";font-style:normal;font-display:swap;font-weight:300 700;src:url(${displayUrl}) format("woff2-variations")}
+@font-face{font-family:"Inter";font-style:normal;font-display:swap;font-weight:100 900;src:url(${textUrl}) format("woff2-variations")}`;
 
 interface Props {
   title: string;
@@ -46,8 +35,8 @@ const last = events[events.length - 1];
     <meta name="theme-color" content="#111111" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <link rel="preload" href={text400Url} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={display500Url} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={displayUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={textUrl} as="font" type="font/woff2" crossorigin />
     <style set:html={fontFaces}></style>
   </head>
   <body>
