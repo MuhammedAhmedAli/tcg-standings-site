@@ -18,7 +18,7 @@ const last = format.events[format.events.length - 1]!;
 const current = format.until === null;
 ---
 
-<Base title={`${format.name} standings · Jesters Locals`} description={`Jesters Locals standings for ${format.name}: ${format.standings.length} players over ${format.events.length} weeks.`} section="standings">
+<Base title={`${format.name} standings · Jesters Locals`} description={`Jesters Locals standings for ${format.name}: ${format.standings.length} players over ${format.events.length} weeks.`} format={format.slug}>
   <p class="eyebrow">Format · {current ? "current" : `${fmtDate(first.date)} to ${fmtDate(last.date)}`}</p>
   <h1 data-enter>{format.name} standings</h1>
   <p class="lede">

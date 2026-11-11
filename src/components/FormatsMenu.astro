@@ -1,0 +1,186 @@
+---
+import { getSiteData } from "../lib/site-data";
+import { groupByBlock } from "../data";
+import { href } from "../lib/format";
+
+interface Props {
+  /** Slug of the format page being shown, if any. */
+  current?: string;
+}
+const { current } = Astro.props;
+const { formats } = await getSiteData();
+const blocks = groupByBlock(formats);
+---
+
+{
+  blocks.length > 0 && (
+    <details class="fmenu">
+      <summary aria-current={current ? "page" : undefined}>
+        Formats
+        <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+          <path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </summary>
+      <div class="fmenu-panel">
+        {blocks.map((b) => (
+          <div class="fmenu-block">
+            <p class="fmenu-head">{b.name}</p>
+            <ul>
+              {b.formats.map((f) => (
+                <li>
+                  <a href={href(`/formats/${f.slug}/`)} aria-current={f.slug === current ? "page" : undefined}>
+                    <span>{f.name}</span>
+                    {f.until === null && <span class="fmenu-tag">Current</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <a class="fmenu-all" href={href("/#formats-h")}>Compare all formats</a>
+      </div>
+    </details>
+  )
+}
+
+<style>
+  .fmenu {
+    position: relative;
+  }
+  .fmenu summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--muted);
+    border-radius: 8px;
+    transition: color 0.15s, background-color 0.15s;
+  }
+  .fmenu summary::-webkit-details-marker {
+    display: none;
+  }
+  .fmenu summary:hover,
+  .fmenu[open] summary,
+  .fmenu summary[aria-current="page"] {
+    color: var(--ink);
+  }
+  .fmenu summary:hover {
+    background: var(--surface);
+  }
+  .fmenu svg {
+    transition: transform 0.15s var(--ease);
+  }
+  .fmenu[open] svg {
+    transform: rotate(180deg);
+  }
+  .fmenu-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 30;
+    width: 260px;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+  .fmenu-block + .fmenu-block {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--line);
+  }
+  .fmenu-head {
+    margin: 0;
+    padding: 8px 10px 4px;
+    font: 500 11px/1.4 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .fmenu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .fmenu-panel a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 15px;
+    color: var(--muted);
+    background: none;
+  }
+  .fmenu-panel a:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+  .fmenu-panel a[aria-current="page"] {
+    color: var(--ink);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .fmenu-tag {
+    font: 500 11px/1 var(--font-mono);
+    color: var(--accent-soft);
+  }
+  .fmenu-panel .fmenu-all {
+    margin-top: 4px;
+    border-top: 1px solid var(--line);
+    border-radius: 0 0 6px 6px;
+    font-size: 14px;
+    color: var(--accent-soft);
+  }
+  /* Phones: the section links are a tab row; the menu drops across the full header width. */
+  @media (max-width: 720px) {
+    .fmenu {
+      position: static;
+    }
+    .fmenu summary {
+      min-height: 40px;
+      padding: 0 8px;
+      border-radius: 0;
+      border-bottom: 2px solid transparent;
+    }
+    .fmenu summary:hover {
+      background: none;
+    }
+    .fmenu summary[aria-current="page"] {
+      border-bottom-color: var(--accent);
+    }
+    .fmenu-panel {
+      top: 100%;
+      left: 16px;
+      right: 16px;
+      width: auto;
+    }
+  }
+</style>
+
+<script>
+  // Close on Escape (focus back to the toggle) and on a click or focus outside the menu.
+  for (const menu of document.querySelectorAll<HTMLDetailsElement>(".fmenu")) {
+    const summary = menu.querySelector("summary")!;
+    document.addEventListener("click", (e) => {
+      if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+    });
+    menu.addEventListener("focusout", (e) => {
+      if (menu.open && !menu.contains(e.relatedTarget as Node | null) && e.relatedTarget) menu.open = false;
+    });
+    menu.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && menu.open) {
+        menu.open = false;
+        summary.focus();
+      }
+    });
+  }
+</script>

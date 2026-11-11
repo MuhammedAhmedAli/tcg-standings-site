@@ -3,6 +3,7 @@ import "../styles/global.css";
 import { getSiteData } from "../lib/site-data";
 import { fmtDate, href } from "../lib/format";
 import PlayerSearch from "../components/PlayerSearch.astro";
+import FormatsMenu from "../components/FormatsMenu.astro";
 // Self-hosted, latin-only fonts: served from the same origin as the page, so no Google Fonts round trips.
 import soraUrl from "@fontsource-variable/sora/files/sora-latin-wght-normal.woff2?url";
 import figtreeUrl from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
@@ -19,8 +20,10 @@ interface Props {
   title: string;
   description?: string;
   section?: "standings" | "events" | "records";
+  /** Slug of the format page being shown; marks the Formats menu as current. */
+  format?: string;
 }
-const { title, description = "Jesters weekly locals: overall standings, player records and every event's results.", section } = Astro.props;
+const { title, description = "Jesters weekly locals: overall standings, player records and every event's results.", section, format } = Astro.props;
 const { events } = await getSiteData();
 const last = events[events.length - 1];
 ---
@@ -49,6 +52,7 @@ const last = events[events.length - 1];
           <a href={href("/")} aria-current={section === "standings" ? "page" : undefined}>Standings</a>
           <a href={href("/events/")} aria-current={section === "events" ? "page" : undefined}>Events</a>
           <a href={href("/records/")} aria-current={section === "records" ? "page" : undefined}>Records</a>
+          <FormatsMenu current={format} />
         </nav>
         <PlayerSearch />
       </div>
