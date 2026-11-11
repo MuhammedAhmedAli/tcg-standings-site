@@ -1,0 +1,42 @@
+---
+import "../styles/global.css";
+import { getSiteData } from "../lib/site-data";
+import { fmtDate, href } from "../lib/format";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = "Weekly locals standings and player stats." } = Astro.props;
+const { events } = await getSiteData();
+const last = events[events.length - 1];
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body>
+    <header class="site">
+      <div class="wrap">
+        <a class="brand" href={href("/")}>Locals Standings</a>
+        <nav>
+          <a href={href("/")}>Standings</a>
+          <a href={href("/events/")}>Events</a>
+        </nav>
+      </div>
+    </header>
+    <main class="wrap">
+      <slot />
+    </main>
+    <footer class="site">
+      <div class="wrap">
+        {events.length} events{last && <> · latest {fmtDate(last.date)}</>}
+      </div>
+    </footer>
+  </body>
+</html>

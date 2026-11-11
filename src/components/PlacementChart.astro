@@ -1,0 +1,162 @@
+---
+import type { EventResult } from "../data";
+import { fmtDate, fmtShortDate, ordinal } from "../lib/format";
+
+interface Props {
+  history: EventResult[];
+}
+const { history } = Astro.props;
+
+// Finish position per event, 1st at the top. Y axis runs to the largest field this player was in.
+const W = 720;
+const H = 240;
+const pad = { top: 16, right: 16, bottom: 32, left: 40 };
+const iw = W - pad.left - pad.right;
+const ih = H - pad.top - pad.bottom;
+const maxRank = Math.max(...history.map((h) => h.entrants), 2);
+const n = history.length;
+
+// X is real time, so gaps between events show as gaps.
+const t = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
+const t0 = t(history[0]!.date);
+const span = t(history[n - 1]!.date) - t0;
+const x = (i: number) => pad.left + (span === 0 ? iw / 2 : ((t(history[i]!.date) - t0) / span) * iw);
+const y = (rank: number) => pad.top + ((rank - 1) / (maxRank - 1)) * ih;
+
+const step = maxRank > 20 ? 10 : 5;
+const yTicks = [1, ...Array.from({ length: Math.floor(maxRank / step) }, (_, i) => (i + 1) * step)];
+// Label first, last, and others only where they won't collide (~70px apart).
+const labelled = new Set<number>();
+let lastX = -Infinity;
+history.forEach((_, i) => {
+  const px = x(i);
+  const fitsBeforeEnd = i === n - 1 || x(n - 1) - px >= 70;
+  if (px - lastX >= 70 && fitsBeforeEnd) {
+    labelled.add(i);
+    lastX = px;
+  }
+});
+labelled.add(n - 1);
+const points = history.map((h, i) => ({ ...h, cx: x(i), cy: y(h.rank) }));
+const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(" ");
+---
+
+<figure class="chart card">
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Finishing position at each event, first place at the top">
+    {
+      yTicks.map((t) => (
+        <g>
+          <line class="grid" x1={pad.left} x2={W - pad.right} y1={y(t)} y2={y(t)} />
+          <text class="axis" x={pad.left - 8} y={y(t)} dy="0.32em" text-anchor="end">
+            {ordinal(t)}
+          </text>
+        </g>
+      ))
+    }
+    {
+      points.map((p, i) =>
+        labelled.has(i) ? (
+          <text class="axis" x={p.cx} y={H - 10} text-anchor="middle">
+            {fmtShortDate(p.date)}
+          </text>
+        ) : null,
+      )
+    }
+    {n > 1 && <path class="line" d={path} />}
+    {
+      points.map((p) => (
+        <g class="pt" tabindex="0" data-tip={`${fmtDate(p.date)}\n${ordinal(p.rank)} of ${p.entrants} · ${p.wins}-${p.losses}-${p.draws}`}>
+          <circle class="hit" cx={p.cx} cy={p.cy} r="12" />
+          <circle class="dot" cx={p.cx} cy={p.cy} r="4.5" />
+        </g>
+      ))
+    }
+  </svg>
+  <div class="tip" role="status" hidden></div>
+</figure>
+
+<style>
+  .chart {
+    position: relative;
+    margin: 0;
+    padding: 12px 8px 4px;
+    overflow-x: auto;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    min-width: 600px;
+    height: auto;
+    overflow: visible;
+  }
+  .grid {
+    stroke: var(--grid);
+    stroke-width: 1;
+  }
+  .axis {
+    fill: var(--text-3);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .line {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+  .dot {
+    fill: var(--accent);
+    stroke: var(--surface);
+    stroke-width: 2;
+  }
+  .hit {
+    fill: transparent;
+  }
+  .pt {
+    cursor: default;
+    outline: none;
+  }
+  .pt:hover .dot,
+  .pt:focus-visible .dot {
+    r: 6.5;
+  }
+  .tip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--text);
+    color: var(--surface);
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 6px 8px;
+    border-radius: 6px;
+    white-space: pre;
+    transform: translate(-50%, calc(-100% - 10px));
+  }
+</style>
+
+<script>
+  for (const fig of Array.from(document.querySelectorAll<HTMLElement>("figure.chart"))) {
+    const tip = fig.querySelector<HTMLElement>(".tip")!;
+    const svg = fig.querySelector("svg")!;
+    const show = (g: SVGGElement) => {
+      const dot = g.querySelector<SVGCircleElement>(".dot")!;
+      const box = dot.getBoundingClientRect();
+      const host = fig.getBoundingClientRect();
+      tip.textContent = g.dataset.tip ?? "";
+      tip.style.left = `${box.left + box.width / 2 - host.left + fig.scrollLeft}px`;
+      const top = box.top - host.top;
+      // Near the top edge the figure's scroll box would clip the tip, so drop it below the point.
+      const below = top < 56;
+      tip.style.top = `${below ? box.bottom - host.top : top}px`;
+      tip.style.transform = below ? "translate(-50%, 10px)" : "";
+      tip.hidden = false;
+    };
+    const hide = () => (tip.hidden = true);
+    for (const g of Array.from(svg.querySelectorAll<SVGGElement>(".pt"))) {
+      g.addEventListener("mouseenter", () => show(g));
+      g.addEventListener("focus", () => show(g));
+      g.addEventListener("mouseleave", hide);
+      g.addEventListener("blur", hide);
+    }
+  }
+</script>

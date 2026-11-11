@@ -6,6 +6,9 @@
     "node": ">=20"
   },
   "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
     "test": "tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "data:check": "tsx scripts/check-data.ts"
@@ -14,5 +17,8 @@
     "@types/node": "^22.20.5",
     "tsx": "^4.23.14",
     "typescript": "~5.9"
+  },
+  "dependencies": {
+    "astro": "^5.18.2"
   }
 }

@@ -1,0 +1,90 @@
+---
+import Base from "../../layouts/Base.astro";
+import PlacementChart from "../../components/PlacementChart.astro";
+import { getSiteData } from "../../lib/site-data";
+import { fmtDate, fmtPct, href, ordinal } from "../../lib/format";
+import type { PlayerStats } from "../../data";
+
+export async function getStaticPaths() {
+  const { standings } = await getSiteData();
+  return standings.map((player) => ({ params: { slug: player.slug }, props: { player } }));
+}
+
+const { player } = Astro.props as { player: PlayerStats };
+const { position, standings } = await getSiteData();
+const pos = position.get(player.name)!;
+const history = [...player.history].reverse();
+---
+
+<Base title={`${player.name} · Locals`} description={`${player.name}: ${player.events} events, ${fmtPct(player.winRate)} win rate.`}>
+  <p class="muted" style="margin:0 0 8px"><a href={href("/")}>← Standings</a></p>
+  <h1>{player.name}</h1>
+  <p class="lede">
+    {ordinal(pos)} of {standings.length} overall · {player.events} events from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}
+  </p>
+
+  <div class="tiles">
+    <div class="tile card">
+      <div class="label">Win rate</div>
+      <div class="value">{fmtPct(player.winRate)}</div>
+      <div class="sub">{player.wins} of {player.matches} matches</div>
+    </div>
+    <div class="tile card">
+      <div class="label">Tie rate</div>
+      <div class="value">{fmtPct(player.tieRate)}</div>
+      <div class="sub">{player.draws} draws</div>
+    </div>
+    <div class="tile card">
+      <div class="label">Record</div>
+      <div class="value">{player.wins}-{player.losses}-{player.draws}</div>
+      <div class="sub">{player.points} points</div>
+    </div>
+    <div class="tile card">
+      <div class="label">Average finish</div>
+      <div class="value">{player.averageFinish.toFixed(1)}</div>
+      <div class="sub">Best: {ordinal(player.bestFinish)}</div>
+    </div>
+    <div class="tile card">
+      <div class="label">Event wins</div>
+      <div class="value">{player.firsts}</div>
+      <div class="sub">{player.events} events played</div>
+    </div>
+  </div>
+
+  <h2>Finish by week</h2>
+  <PlacementChart history={player.history} />
+
+  <h2>Event history</h2>
+  <div class="card table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col" class="num">Finish</th>
+          <th scope="col" class="num">W-L-D</th>
+          <th scope="col" class="num">OWP</th>
+          <th scope="col" class="num">OOWP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          history.map((h) => (
+            <tr>
+              <td class="date">
+                <a href={href(`/events/${h.date}/`)}>{fmtDate(h.date)}</a>
+              </td>
+              <td class="num">
+                {ordinal(h.rank)} <span class="muted">/ {h.entrants}</span>
+              </td>
+              <td class="num">
+                {h.wins}-{h.losses}-{h.draws}
+              </td>
+              <td class="num">{h.owp == null ? "–" : `${h.owp.toFixed(2)}%`}</td>
+              <td class="num">{h.oowp == null ? "–" : `${h.oowp.toFixed(2)}%`}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Base>

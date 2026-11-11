@@ -1,0 +1,55 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getSiteData } from "../../lib/site-data";
+import { fmtDate, href, ordinal } from "../../lib/format";
+import type { EventSummary } from "../../data";
+
+export async function getStaticPaths() {
+  const { events } = await getSiteData();
+  return events.map((event) => ({ params: { date: event.date }, props: { event } }));
+}
+
+const { event } = Astro.props as { event: EventSummary };
+const { standings } = await getSiteData();
+
+// Rebuild this event's table from each player's history.
+const results = standings
+  .flatMap((p) => p.history.filter((h) => h.date === event.date).map((h) => ({ ...h, name: p.name, slug: p.slug })))
+  .sort((a, b) => a.rank - b.rank);
+---
+
+<Base title={`${fmtDate(event.date)} · Locals`}>
+  <p class="muted" style="margin:0 0 8px"><a href={href("/events/")}>← Events</a></p>
+  <h1>{fmtDate(event.date)}</h1>
+  <p class="lede">{event.entrants} players · won by {event.winner}</p>
+  <div class="card table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col" class="num">Finish</th>
+          <th scope="col">Player</th>
+          <th scope="col" class="num">W-L-D</th>
+          <th scope="col" class="num">OWP</th>
+          <th scope="col" class="num">OOWP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          results.map((r) => (
+            <tr>
+              <td class="num">{ordinal(r.rank)}</td>
+              <td>
+                <a href={href(`/players/${r.slug}/`)}>{r.name}</a>
+              </td>
+              <td class="num">
+                {r.wins}-{r.losses}-{r.draws}
+              </td>
+              <td class="num">{r.owp == null ? "–" : `${r.owp.toFixed(2)}%`}</td>
+              <td class="num">{r.oowp == null ? "–" : `${r.oowp.toFixed(2)}%`}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</Base>
