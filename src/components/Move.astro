@@ -1,0 +1,48 @@
+---
+interface Props {
+  /** Places moved since the previous event: positive = climbed, null = new, 0/undefined = no change. */
+  delta: number | null | undefined;
+}
+const { delta } = Astro.props;
+---
+
+{
+  delta === null ? (
+    <span class="move new" title="New since the last locals">new</span>
+  ) : delta ? (
+    <span class:list={["move", delta > 0 ? "up" : "down"]} title={`${delta > 0 ? "Up" : "Down"} ${Math.abs(delta)} since the last locals`}>
+      <span aria-hidden="true">{delta > 0 ? "▲" : "▼"}</span>
+      <span class="visually-hidden">{delta > 0 ? "up" : "down"}</span>
+      {Math.abs(delta)}
+    </span>
+  ) : null
+}
+
+<style>
+  .move {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 11px;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+  .move span[aria-hidden] {
+    font-size: 8px;
+    margin-right: 2px;
+    vertical-align: 1px;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .up {
+    color: #7fbf8a;
+  }
+  .down {
+    color: #d08070;
+  }
+</style>

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { loadResults } from "../src/data/load";
-import { computeEvents, computePlayerStats, computeStandings, computeSummary } from "../src/data/stats";
+import { computeEvents, computeMovement, computePlayerStats, computeStandings, computeSummary } from "../src/data/stats";
 
 // Real export of the "Weekly_Input" tab, 8 Jan – 29 Oct 2026 (after Ali's 11 Nov clean-up).
 const FIXTURE = fileURLToPath(new URL("./fixtures/weekly-input.csv", import.meta.url));
@@ -71,4 +71,22 @@ test("summary: turnout, draw share and undefeated runs over the real export", ()
   assert.equal(s.peakEntrants, 35);
   assert.equal(s.undefeated, 83);
   assert.ok(s.topWinners.length > 0 && s.topWins >= 1);
+});
+
+test("average percentile is the mean of rank / entrants", () => {
+  const p = players.get("Rick S")!;
+  const expected = p.history.reduce((a, h) => a + h.rank / h.entrants, 0) / p.history.length;
+  assert.ok(Math.abs(p.averagePercentile - expected) < 1e-12);
+  assert.ok(p.averagePercentile > 0 && p.averagePercentile <= 1);
+});
+
+test("movement compares standings before and after the latest event", () => {
+  const move = computeMovement(rows)!;
+  const latest = computeEvents(rows).at(-1)!.date;
+  const before = computeStandings(rows.filter((r) => r.date !== latest)).map((p) => p.name);
+  computeStandings(rows).forEach((p, i) => {
+    const prev = before.indexOf(p.name);
+    assert.equal(move.get(p.name), prev === -1 ? null : prev - i);
+  });
+  assert.equal(computeMovement(rows.filter((r) => r.date === latest)), undefined);
 });

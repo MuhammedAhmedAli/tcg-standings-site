@@ -6,6 +6,8 @@ const tidy = (s: string) => s.replace("Sept", "Sep");
 export const fmtDate = (iso: string) => tidy(dateFmt.format(new Date(`${iso}T00:00:00Z`)));
 export const fmtShortDate = (iso: string) => tidy(shortDateFmt.format(new Date(`${iso}T00:00:00Z`)));
 export const fmtPct = (x: number) => `${(x * 100).toFixed(1)}%`;
+/** A finish as a share of the field: rank / entrants → "Top 12%". */
+export const fmtTop = (x: number) => `Top ${Math.max(1, Math.round(x * 100))}%`;
 export const fmtRecord = (w: number, l: number, d: number) => `${w}-${l}-${d}`;
 
 export function ordinal(n: number): string {

@@ -6,7 +6,7 @@ import FormatPicker from "../components/FormatPicker.astro";
 import ScopeStats from "../components/ScopeStats.astro";
 import { fmtDate, fmtPct, href, ordinal } from "../lib/format";
 
-const { standings, events, summary, formats } = await getSiteData();
+const { standings, events, summary, formats, movement } = await getSiteData();
 const latest = events[events.length - 1]!;
 const podium = standings
   .flatMap((p) => p.history.filter((h) => h.date === latest.date && h.rank <= 3).map((h) => ({ ...h, name: p.name, slug: p.slug })))
@@ -46,7 +46,7 @@ const podium = standings
 
   <h2 id="table-h">All players</h2>
   <FormatPicker current={null} />
-  <StandingsTable standings={standings} labelledby="table-h" />
+  <StandingsTable standings={standings} labelledby="table-h" movement={movement} />
 
   {
     formats.length > 0 && (

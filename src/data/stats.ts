@@ -40,6 +40,7 @@ export function computePlayerStats(rows: ResultRow[]): PlayerStats[] {
       tieRate: matches ? draws / matches : 0,
       bestFinish: Math.min(...list.map((r) => r.rank)),
       averageFinish: sum(list, (r) => r.rank) / list.length,
+      averagePercentile: sum(list, (r) => r.rank / r.entrants) / list.length,
       firsts: list.filter((r) => r.rank === 1).length,
       firstEvent: list[0]!.date,
       lastEvent: list[list.length - 1]!.date,
@@ -71,6 +72,23 @@ export function computeStandings(rows: ResultRow[]): PlayerStats[] {
       b.winRate - a.winRate ||
       b.events - a.events ||
       a.name.localeCompare(b.name),
+  );
+}
+
+/**
+ * Places moved since the previous event: positive = climbed. `null` = not in the previous standings (new).
+ * Undefined when there is only one event, so there is nothing to compare.
+ */
+export function computeMovement(rows: ResultRow[]): Map<string, number | null> | undefined {
+  const dates = [...new Set(rows.map((r) => r.date))].sort();
+  if (dates.length < 2) return undefined;
+  const latest = dates[dates.length - 1]!;
+  const before = new Map(computeStandings(rows.filter((r) => r.date !== latest)).map((p, i) => [p.name, i + 1]));
+  return new Map(
+    computeStandings(rows).map((p, i) => {
+      const prev = before.get(p.name);
+      return [p.name, prev === undefined ? null : prev - (i + 1)];
+    }),
   );
 }
 

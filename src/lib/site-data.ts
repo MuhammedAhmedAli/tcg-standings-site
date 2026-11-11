@@ -1,4 +1,4 @@
-import { computeEvents, computeStandings, computeSummary, formatFor, loadFormats, loadResults } from "../data";
+import { computeEvents, computeMovement, computeStandings, computeSummary, formatFor, loadFormats, loadResults } from "../data";
 import type { EventSummary, Format, PlayerStats, ResultRow, ScopeSummary } from "../data";
 
 export interface FormatData extends Format {
@@ -7,12 +7,16 @@ export interface FormatData extends Format {
   summary: ScopeSummary;
   /** Players whose first ever locals fell in this format. */
   newPlayers: number;
+  /** Places moved at the format's latest event; only set for the format that holds the latest locals. */
+  movement?: Map<string, number | null>;
 }
 
 export interface SiteData {
   standings: PlayerStats[];
   events: EventSummary[];
   summary: ScopeSummary;
+  /** Places moved at the latest locals (positive = climbed, null = new). */
+  movement?: Map<string, number | null>;
   /** Overall standings position by player name (1-based). */
   position: Map<string, number>;
   /** Formats with at least one event, oldest first. */
@@ -53,6 +57,9 @@ export function getSiteData(): Promise<SiteData> {
           newPlayers: fStandings.filter((p) => formatFor(debut.get(p.name)!, formatsResult.formats)?.slug === f.slug).length,
         };
       });
+    const lastDate = rows.reduce((m, r) => (r.date > m ? r.date : m), "");
+    const current = formats.find((f) => f.events.some((e) => e.date === lastDate));
+    if (current) current.movement = computeMovement(byFormat.get(current.slug)!);
     const formatOf = new Map<string, FormatData>();
     for (const f of formats) for (const e of f.events) formatOf.set(e.date, f);
 
@@ -60,6 +67,7 @@ export function getSiteData(): Promise<SiteData> {
       standings,
       events: computeEvents(rows),
       summary: computeSummary(rows),
+      movement: computeMovement(rows),
       position: new Map(standings.map((p, i) => [p.name, i + 1])),
       formats,
       formatOf,

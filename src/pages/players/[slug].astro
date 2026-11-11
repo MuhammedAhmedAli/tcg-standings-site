@@ -2,7 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import PlacementChart from "../../components/PlacementChart.astro";
 import { getSiteData } from "../../lib/site-data";
-import { fmtDate, fmtPct, href, ordinal } from "../../lib/format";
+import { fmtDate, fmtPct, fmtTop, href, ordinal } from "../../lib/format";
 import type { PlayerStats } from "../../data";
 
 export async function getStaticPaths() {
@@ -21,6 +21,9 @@ const byFormat = [...formats]
   });
 const pos = position.get(player.name)!;
 const history = [...player.history].reverse();
+const LATEST = 5;
+const recent = history.slice(0, LATEST);
+const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.length;
 ---
 
 <Base title={`${player.name} · Jesters Locals`} description={`${player.name} at Jesters Locals: ${player.events} events, ${fmtPct(player.winRate)} win rate.`} section="standings">
@@ -47,8 +50,8 @@ const history = [...player.history].reverse();
     </div>
     <div class="stat">
       <div class="label">Average finish</div>
-      <div class="value">{player.averageFinish.toFixed(1)}</div>
-      <div class="sub">Best {ordinal(player.bestFinish)}</div>
+      <div class="value">{fmtTop(player.averagePercentile)}</div>
+      <div class="sub">Avg place {player.averageFinish.toFixed(1)} · best {ordinal(player.bestFinish)}</div>
     </div>
     <div class="stat">
       <div class="label">Locals won</div>
@@ -56,6 +59,62 @@ const history = [...player.history].reverse();
       <div class="sub">of {player.events} played</div>
     </div>
   </div>
+
+  <div class="latest-head">
+    <h2 id="latest-h">Latest finishes</h2>
+    {
+      history.length > LATEST && (
+        <p class="muted form-note">
+          Last {LATEST}: <strong>{fmtTop(recentPct)}</strong> on average, against {fmtTop(player.averagePercentile)} overall
+        </p>
+      )
+    }
+  </div>
+  <div class="table-frame" id="finishes" data-collapsed={history.length > LATEST ? "" : undefined}>
+    <table aria-labelledby="latest-h">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Format</th>
+          <th scope="col" class="num">Place</th>
+          <th scope="col" class="num">Of field</th>
+          <th scope="col" class="num">W-L-D</th>
+          <th scope="col" class="num">Points</th>
+          <th scope="col" class="num">OWP</th>
+          <th scope="col" class="num">OOWP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          history.map((h, i) => (
+            <tr class:list={{ more: i >= LATEST }}>
+              <td class="date">
+                <a href={href(`/events/${h.date}/`)}>{fmtDate(h.date)}</a>
+              </td>
+              <td class="muted">{formatOf.get(h.date)?.name ?? "–"}</td>
+              <td class:list={["num pos", { "is-podium": h.rank <= 3 }]}>
+                {ordinal(h.rank)} <span class="muted">/ {h.entrants}</span>
+              </td>
+              <td class="num">{fmtTop(h.rank / h.entrants)}</td>
+              <td class="num">
+                {h.wins}-{h.losses}-{h.draws}
+              </td>
+              <td class="num">{h.wins * 3 + h.draws}</td>
+              <td class="num">{h.owp == null ? "–" : `${h.owp.toFixed(2)}%`}</td>
+              <td class="num">{h.oowp == null ? "–" : `${h.oowp.toFixed(2)}%`}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  {
+    history.length > LATEST && (
+      <button type="button" class="show-all" id="show-all" aria-controls="finishes" aria-expanded="false">
+        Show all {history.length} events
+      </button>
+    )
+  }
 
   {
     byFormat.length > 0 && (
@@ -90,7 +149,9 @@ const history = [...player.history].reverse();
                   </td>
                   <td class="num">{fmtPct(stats.winRate)}</td>
                   <td class="num">{fmtPct(stats.tieRate)}</td>
-                  <td class="num">{stats.averageFinish.toFixed(1)}</td>
+                  <td class="num" title={`Average place ${stats.averageFinish.toFixed(1)}`}>
+                    {fmtTop(stats.averagePercentile)}
+                  </td>
                   <td class="num">{ordinal(stats.bestFinish)}</td>
                 </tr>
               ))}
@@ -104,39 +165,55 @@ const history = [...player.history].reverse();
   <h2>Finish by week</h2>
   <PlacementChart history={player.history} />
 
-  <h2>Event history</h2>
-  <div class="table-frame">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Date</th>
-          <th scope="col">Format</th>
-          <th scope="col" class="num">Finish</th>
-          <th scope="col" class="num">W-L-D</th>
-          <th scope="col" class="num">OWP</th>
-          <th scope="col" class="num">OOWP</th>
-        </tr>
-      </thead>
-      <tbody>
-        {
-          history.map((h) => (
-            <tr>
-              <td class="date">
-                <a href={href(`/events/${h.date}/`)}>{fmtDate(h.date)}</a>
-              </td>
-              <td class="muted">{formatOf.get(h.date)?.name ?? "–"}</td>
-              <td class:list={["num pos", { "is-podium": h.rank <= 3 }]}>
-                {ordinal(h.rank)} <span class="muted">/ {h.entrants}</span>
-              </td>
-              <td class="num">
-                {h.wins}-{h.losses}-{h.draws}
-              </td>
-              <td class="num">{h.owp == null ? "–" : `${h.owp.toFixed(2)}%`}</td>
-              <td class="num">{h.oowp == null ? "–" : `${h.oowp.toFixed(2)}%`}</td>
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
-  </div>
 </Base>
+
+<style>
+  .latest-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .latest-head h2 {
+    margin-bottom: 0;
+  }
+  .form-note {
+    margin: 0;
+    font-size: 14px;
+  }
+  .form-note strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  #finishes[data-collapsed] .more {
+    display: none;
+  }
+  .show-all {
+    margin-top: 12px;
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .show-all:hover {
+    background: var(--surface-2);
+  }
+</style>
+
+<script>
+  const frame = document.getElementById("finishes");
+  const button = document.getElementById("show-all");
+  button?.addEventListener("click", () => {
+    const collapsed = frame!.toggleAttribute("data-collapsed");
+    button.setAttribute("aria-expanded", String(!collapsed));
+    button.textContent = collapsed ? button.dataset.more! : "Show fewer";
+  });
+  if (button) button.dataset.more = button.textContent!.trim();
+</script>

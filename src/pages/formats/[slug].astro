@@ -30,7 +30,7 @@ const current = format.until === null;
 
   <h2 id="table-h">Players in {format.name}</h2>
   <FormatPicker current={format.slug} />
-  <StandingsTable standings={format.standings} labelledby="table-h" />
+  <StandingsTable standings={format.standings} labelledby="table-h" movement={format.movement} />
 </Base>
 
 <style>
