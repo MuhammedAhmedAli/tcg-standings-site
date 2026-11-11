@@ -2,6 +2,17 @@
 import "../styles/global.css";
 import { getSiteData } from "../lib/site-data";
 import { fmtDate, href } from "../lib/format";
+// Self-hosted, latin-only fonts: served from the same origin as the page, so no Google Fonts round trips.
+import soraUrl from "@fontsource-variable/sora/files/sora-latin-wght-normal.woff2?url";
+import figtreeUrl from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
+import mono400Url from "@fontsource/martian-mono/files/martian-mono-latin-400-normal.woff2?url";
+import mono500Url from "@fontsource/martian-mono/files/martian-mono-latin-500-normal.woff2?url";
+
+const fontFaces = `
+@font-face{font-family:"Sora";font-style:normal;font-display:swap;font-weight:100 800;src:url(${soraUrl}) format("woff2-variations")}
+@font-face{font-family:"Figtree";font-style:normal;font-display:swap;font-weight:300 900;src:url(${figtreeUrl}) format("woff2-variations")}
+@font-face{font-family:"Martian Mono";font-style:normal;font-display:swap;font-weight:400;src:url(${mono400Url}) format("woff2")}
+@font-face{font-family:"Martian Mono";font-style:normal;font-display:swap;font-weight:500;src:url(${mono500Url}) format("woff2")}`;
 
 interface Props {
   title: string;
@@ -23,12 +34,10 @@ const last = events[events.length - 1];
     <meta name="theme-color" content="#111111" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400..600&family=Figtree:wght@400..600&family=Martian+Mono:wght@400..500&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preload" href={soraUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={figtreeUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={mono400Url} as="font" type="font/woff2" crossorigin />
+    <style set:html={fontFaces}></style>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -54,17 +63,13 @@ const last = events[events.length - 1];
 </html>
 
 <style is:global>
-  /* The page heading enters once on load. */
+  /* The page heading settles once on load. Visible from the first paint: no fade, no delay. */
   [data-enter] {
-    animation: enter 0.6s var(--ease) both;
-  }
-  [data-enter] + * {
-    animation: enter 0.6s 0.08s var(--ease) both;
+    animation: enter 0.35s var(--ease);
   }
   @keyframes enter {
     from {
-      opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(6px);
     }
   }
 </style>
