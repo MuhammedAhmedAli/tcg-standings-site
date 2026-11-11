@@ -144,16 +144,16 @@ header.site nav {
     margin: 0 0 0 -8px;
     gap: 0;
   }
-  header.site nav a {
+  header.site .wrap nav a {
     padding: 0 8px;
     min-height: 40px;
     border-radius: 0;
     border-bottom: 2px solid transparent;
   }
-  header.site nav a:hover {
+  header.site .wrap nav a:hover {
     background: none;
   }
-  header.site nav a[aria-current="page"] {
+  header.site .wrap nav a[aria-current="page"] {
     border-bottom-color: var(--accent);
   }
 }
