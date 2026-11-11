@@ -15,12 +15,8 @@ test("loads every row from the real export", () => {
   assert.equal(issues.filter((i) => i.severity === "error").length, 0);
 });
 
-test("reports the remaining data-entry problems in the export", () => {
-  // Two rows on 18/06/26 are entered as 0-0-0 despite P=3.
-  assert.deepEqual(
-    issues.map((i) => i.message),
-    ["Matt K (18/06/26): P=3 but W+L+D=0", "Zach S (18/06/26): P=3 but W+L+D=0"],
-  );
+test("the cleaned-up export has no data issues", () => {
+  assert.deepEqual(issues, []);
 });
 
 test("Rick S: totals, rates and finishes match a hand calculation", () => {
@@ -44,7 +40,7 @@ test("event sizes and ranks come from the sheet", () => {
   assert.deepEqual(rickG.history.map((h) => [h.date, h.rank]), [["2026-03-12", 15]]);
 });
 
-test("aliases fold 'Lee King' into 'Lee K'", () => {
+test("Lee K: all eight events under one name", () => {
   assert.equal(players.has("Lee King"), false);
   const p = players.get("Lee K")!;
   assert.equal(p.events, 8);
