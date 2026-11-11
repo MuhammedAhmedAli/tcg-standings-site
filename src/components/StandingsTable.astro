@@ -32,11 +32,12 @@ const cols = [
 ---
 
   <div class="toolbar">
-    <label class="field">
+    <slot name="scope" />
+    <label class="field field-search">
       Find a player
       <input id="filter" type="search" placeholder="Name" autocomplete="off" />
     </label>
-    <label class="field">
+    <label class="field field-min">
       Played at least
       <select id="min-events">
         <option value="1">Any</option>
@@ -136,7 +137,7 @@ const cols = [
 
 <style>
   .toolbar {
-    margin-top: 20px;
+    margin-top: 16px;
   }
   .more-stats {
     display: inline-flex;
@@ -201,20 +202,32 @@ const cols = [
   }
   /* Phones: rank, player, points and win rate, so the table fits without sideways scrolling. */
   @media (max-width: 600px) {
+    /* Two rows: what's shown and how many events; then the name search and the column toggle. */
     .toolbar {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px 10px;
     }
     .toolbar :global(.field) {
       width: auto;
-    }
-    .toolbar :global(.field:first-child) {
-      grid-column: 1 / -1;
-    }
-    .toolbar :global(.field select) {
-      width: auto;
       min-width: 0;
+    }
+    .toolbar :global(.field select),
+    .toolbar :global(.field input) {
+      width: 100%;
+      min-width: 0;
+    }
+    .toolbar :global(.fpick) {
+      order: 1;
+    }
+    .toolbar :global(.field-min) {
+      order: 2;
+    }
+    .toolbar :global(.field-search) {
+      order: 3;
+    }
+    .toolbar :global(.more-stats) {
+      order: 4;
     }
     .compact :global(:is(.c-events, .c-record, .c-tie, .c-form, .c-firsts)) {
       display: none;

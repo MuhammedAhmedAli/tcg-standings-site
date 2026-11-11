@@ -16,10 +16,9 @@ const latest = formats[formats.length - 1];
 
 {
   blocks.length > 0 && (
-    <div class="fpick">
-      <label for="fpick-select">Showing</label>
-      <span class="fpick-field">
-        <select id="fpick-select">
+    <label class="field fpick">
+      Showing
+      <select id="fpick-select">
           <option value={href("/")} selected={current === null}>
             All time
           </option>
@@ -33,64 +32,10 @@ const latest = formats[formats.length - 1];
               ))}
             </optgroup>
           ))}
-        </select>
-        <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
-          <path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </span>
-    </div>
+      </select>
+    </label>
   )
 }
-
-<style>
-  .fpick {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 12px 0 0;
-  }
-  .fpick label {
-    font-size: 15px;
-    color: var(--muted);
-  }
-  .fpick-field {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    min-width: 0;
-  }
-  .fpick select {
-    appearance: none;
-    min-height: 44px;
-    max-width: 100%;
-    padding: 0 36px 0 12px;
-    font: 500 15px/1 var(--font-text);
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-  .fpick select:hover {
-    border-color: var(--faint);
-  }
-  .fpick select:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-  .fpick option,
-  .fpick optgroup {
-    background: var(--surface);
-    color: var(--ink);
-  }
-  .fpick svg {
-    position: absolute;
-    right: 12px;
-    color: var(--muted);
-    pointer-events: none;
-  }
-</style>
 
 <script>
   const select = document.querySelector<HTMLSelectElement>("#fpick-select");
