@@ -141,6 +141,8 @@ const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toF
 
 <script>
   for (const fig of Array.from(document.querySelectorAll<HTMLElement>("figure.chart"))) {
+    // On narrow screens the chart scrolls sideways: start at the newest weeks, not the oldest.
+    fig.scrollLeft = fig.scrollWidth;
     const tip = fig.querySelector<HTMLElement>(".tip")!;
     const svg = fig.querySelector("svg")!;
     const show = (g: SVGGElement) => {

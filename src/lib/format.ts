@@ -1,8 +1,10 @@
 const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 const shortDateFmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
-export const fmtDate = (iso: string) => dateFmt.format(new Date(`${iso}T00:00:00Z`));
-export const fmtShortDate = (iso: string) => shortDateFmt.format(new Date(`${iso}T00:00:00Z`));
+// Newer ICU data abbreviates September as "Sept" in en-GB; keep every month to three letters.
+const tidy = (s: string) => s.replace("Sept", "Sep");
+export const fmtDate = (iso: string) => tidy(dateFmt.format(new Date(`${iso}T00:00:00Z`)));
+export const fmtShortDate = (iso: string) => tidy(shortDateFmt.format(new Date(`${iso}T00:00:00Z`)));
 export const fmtPct = (x: number) => `${(x * 100).toFixed(1)}%`;
 export const fmtRecord = (w: number, l: number, d: number) => `${w}-${l}-${d}`;
 

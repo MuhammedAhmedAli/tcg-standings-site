@@ -444,3 +444,57 @@ footer.site .wrap {
     animation: none !important;
   }
 }
+
+/*
+ * Scroll hint: a soft shade on the right edge while a table has more columns off-screen.
+ * The "local" cover scrolls with the content and hides the shade once the end is reached.
+ */
+.table-frame {
+  background:
+    linear-gradient(to left, var(--surface) 40%, transparent) right / 48px 100% no-repeat local,
+    linear-gradient(to left, rgba(0, 0, 0, 0.85), transparent) right / 28px 100% no-repeat scroll,
+    var(--surface);
+}
+thead th,
+thead th.num {
+  background: transparent;
+}
+thead th.sticky {
+  background: var(--surface);
+}
+
+/* Standings: keep the rank pinned beside the player name when the table scrolls sideways. */
+#standings th[data-key="pos"],
+#standings td.pos {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  width: 52px;
+  min-width: 52px;
+  max-width: 52px;
+}
+#standings th.sticky,
+#standings td.sticky {
+  left: 52px;
+  box-shadow: inset -1px 0 0 var(--line);
+}
+#standings tbody tr:hover td.pos {
+  background: var(--surface-2);
+}
+@media (max-width: 600px) {
+  th,
+  td {
+    padding: 11px 10px;
+  }
+  #standings th[data-key="pos"],
+  #standings td.pos {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+  }
+  #standings th.sticky,
+  #standings td.sticky {
+    left: 44px;
+  }
+}
