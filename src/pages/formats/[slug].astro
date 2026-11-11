@@ -22,7 +22,7 @@ const current = format.until === null;
   <p class="eyebrow">Format · {current ? "current" : `${fmtDate(first.date)} to ${fmtDate(last.date)}`}</p>
   <h1 data-enter>{format.name} standings</h1>
   <p class="lede">
-    {format.standings.length} players over {format.events.length} {format.events.length === 1 ? "week" : "weeks"}, since {format.name} became legal on {fmtDate(format.start)}.
+    {format.standings.length} players over {format.events.length} {format.events.length === 1 ? "week" : "weeks"}, since {format.name} became playable at locals on {fmtDate(format.start)}.
     <a href={href(`/events/#${format.slug}`)}>See its events</a>.
   </p>
 

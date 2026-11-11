@@ -40,7 +40,7 @@ export interface FormatsResult {
 }
 
 /**
- * Parse the formats tab: one row per format, a name, the date it became legal and an optional block.
+ * Parse the formats tab: one row per format, a name, the date it became playable at locals and an optional block.
  * Header names are matched loosely ("Format"/"Name"/"Set", "Start"/"Date"/"From", "Block").
  * Without a Block column every format is in DEFAULT_BLOCK. A blank Block cell is reported and the
  * format stays in the block of the format before it.
