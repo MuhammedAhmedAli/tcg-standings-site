@@ -1,7 +1,8 @@
 /*
- * Dealt with taste-skill (start.mjs, gaming): palette lunar-grey-bronze, type sora.
+ * Dealt with taste-skill (start.mjs, gaming): palette lunar-grey-bronze.
  * A near-black table under a warm bronze accent, like card sleeves on a play mat.
- * Numbers set in Martian Mono so columns of stats line up and read as data.
+ * Type picked with UI UX Pro Max: Space Grotesk headings over Inter, with tabular
+ * figures on the body so columns of stats line up without a monospace face.
  */
 :root {
   color-scheme: dark;
@@ -18,9 +19,9 @@
   --accent-ink: #111111;
   --grid: #262626;
 
-  --font-display: "Sora", system-ui, sans-serif;
-  --font-text: "Figtree", system-ui, sans-serif;
-  --font-mono: "Martian Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-text: "Inter", system-ui, sans-serif;
+  --font-data: "Inter", system-ui, sans-serif;
 
   --radius: 10px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -40,6 +41,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font: 400 16px/1.55 var(--font-text);
+  font-variant-numeric: lining-nums tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -111,7 +113,7 @@ header.site .wrap {
   border: 1.5px solid var(--accent);
   display: grid;
   place-items: center;
-  font: 600 11px/1 var(--font-mono);
+  font: 600 11px/1 var(--font-data);
   color: var(--accent);
   transform: rotate(-8deg);
 }
@@ -207,7 +209,7 @@ h2 {
   max-width: 60ch;
 }
 .eyebrow {
-  font: 500 12px/1 var(--font-mono);
+  font: 500 12px/1 var(--font-data);
   color: var(--accent);
   letter-spacing: 0.02em;
   margin: 0 0 16px;
@@ -225,7 +227,7 @@ h2 {
 }
 .num,
 .mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
@@ -321,7 +323,7 @@ th[aria-sort] button {
   color: var(--accent-soft);
 }
 th[aria-sort] button::after {
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
 }
 th[aria-sort="ascending"] button::after {
   content: "↑";
@@ -332,7 +334,7 @@ th[aria-sort="descending"] button::after {
 
 /* Finishing position: podium places in the accent. */
 .pos {
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 13px;
   color: var(--faint);
 }
