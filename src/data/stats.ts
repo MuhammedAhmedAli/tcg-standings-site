@@ -1,4 +1,4 @@
-import type { EventSummary, PlayerStats, ResultRow } from "./types";
+import type { EventSummary, PlayerStats, ResultRow, ScopeSummary } from "./types";
 
 export function slugify(name: string): string {
   return name
@@ -88,6 +88,35 @@ export function computeEvents(rows: ResultRow[]): EventSummary[] {
       entrants: list[0]!.entrants,
       winner: list.find((r) => r.rank === 1)!.player,
     }));
+}
+
+/** Headline numbers for a set of result rows: turnout, draw share, undefeated runs, top event winner. */
+export function computeSummary(rows: ResultRow[]): ScopeSummary {
+  const events = computeEvents(rows);
+  const draws = sum(rows, (r) => r.draws);
+  const results = sum(rows, (r) => r.wins + r.losses + r.draws);
+  const firsts = new Map<string, number>();
+  for (const r of rows) if (r.rank === 1) firsts.set(r.player, (firsts.get(r.player) ?? 0) + 1);
+  const topWins = Math.max(0, ...firsts.values());
+  // Rounds at an event = the most matches anyone played there, so early drops on a perfect record don't count.
+  const rounds = new Map<string, number>();
+  for (const r of rows) rounds.set(r.date, Math.max(rounds.get(r.date) ?? 0, r.wins + r.losses + r.draws));
+  return {
+    events: events.length,
+    players: new Set(rows.map((r) => r.player)).size,
+    averageEntrants: events.length ? sum(events, (e) => e.entrants) / events.length : 0,
+    peakEntrants: Math.max(0, ...events.map((e) => e.entrants)),
+    draws,
+    results,
+    drawShare: results ? draws / results : 0,
+    undefeated: rows.filter((r) => r.wins > 0 && r.wins === rounds.get(r.date)).length,
+    entries: rows.length,
+    topWins,
+    topWinners: [...firsts]
+      .filter(([, n]) => n === topWins && n > 0)
+      .map(([name]) => ({ name, slug: slugify(name) }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  };
 }
 
 function sum<T>(xs: T[], f: (x: T) => number): number {

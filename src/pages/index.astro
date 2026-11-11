@@ -3,9 +3,10 @@ import Base from "../layouts/Base.astro";
 import { getSiteData } from "../lib/site-data";
 import StandingsTable from "../components/StandingsTable.astro";
 import FormatPicker from "../components/FormatPicker.astro";
-import { fmtDate, href, ordinal } from "../lib/format";
+import ScopeStats from "../components/ScopeStats.astro";
+import { fmtDate, fmtPct, href, ordinal } from "../lib/format";
 
-const { standings, events } = await getSiteData();
+const { standings, events, summary, formats } = await getSiteData();
 const latest = events[events.length - 1]!;
 const podium = standings
   .flatMap((p) => p.history.filter((h) => h.date === latest.date && h.rank <= 3).map((h) => ({ ...h, name: p.name, slug: p.slug })))
@@ -18,6 +19,8 @@ const podium = standings
   <p class="lede">
     {standings.length} players across every Jesters locals since {fmtDate(events[0]!.date)}. Three points a win, one a draw.
   </p>
+
+  <ScopeStats summary={summary} />
 
   <section class="latest" aria-labelledby="latest-h">
     <div class="latest-head">
@@ -44,6 +47,42 @@ const podium = standings
   <h2 id="table-h">All players</h2>
   <FormatPicker current={null} />
   <StandingsTable standings={standings} labelledby="table-h" />
+
+  {
+    formats.length > 0 && (
+      <section aria-labelledby="formats-h">
+        <h2 id="formats-h">By format</h2>
+        <div class="table-frame">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Format</th>
+                <th scope="col" class="num">Weeks</th>
+                <th scope="col" class="num">Players</th>
+                <th scope="col" class="num">Avg turnout</th>
+                <th scope="col" class="num">Draw share</th>
+                <th scope="col" class="num">Undefeated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...formats].reverse().map((f) => (
+                <tr>
+                  <td class="player">
+                    <a href={href(`/formats/${f.slug}/`)}>{f.name}</a>
+                  </td>
+                  <td class="num">{f.summary.events}</td>
+                  <td class="num">{f.summary.players}</td>
+                  <td class="num">{f.summary.averageEntrants.toFixed(1)}</td>
+                  <td class="num">{fmtPct(f.summary.drawShare)}</td>
+                  <td class="num">{f.summary.undefeated}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )
+  }
 </Base>
 
 <style>

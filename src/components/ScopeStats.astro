@@ -1,0 +1,74 @@
+---
+import type { ScopeSummary } from "../data";
+import { fmtPct, href } from "../lib/format";
+
+interface Props {
+  summary: ScopeSummary;
+  /** Set on a format page: the all-time numbers to compare against. */
+  overall?: ScopeSummary;
+  /** Set on a format page: players whose first locals fell in this format. */
+  newPlayers?: number;
+}
+
+const { summary: s, overall, newPlayers } = Astro.props;
+const [leader, ...others] = s.topWinners;
+---
+
+<div class="stats scope-stats">
+  <div class="stat">
+    <div class="label">Players</div>
+    <div class="value">{s.players}</div>
+    <div class="sub">{newPlayers === undefined ? `${s.entries} entries` : `${newPlayers} new to locals`}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Average turnout</div>
+    <div class="value">{s.averageEntrants.toFixed(1)}</div>
+    <div class="sub">Peak {s.peakEntrants}</div>
+  </div>
+  <div class="stat">
+    <div class="label">Draw share</div>
+    <div class="value">{fmtPct(s.drawShare)}</div>
+    <div class="sub">
+      {overall ? `${fmtPct(overall.drawShare)} overall` : <a href="#formats-h">Compare formats</a>}
+    </div>
+  </div>
+  <div class="stat">
+    <div class="label">Undefeated runs</div>
+    <div class="value">{s.undefeated}</div>
+    <div class="sub">{fmtPct(s.entries ? s.undefeated / s.entries : 0)} of entries</div>
+  </div>
+  <div class="stat">
+    <div class="label">Most event wins</div>
+    <div class="value name">
+      {leader ? <a href={href(`/players/${leader.slug}/`)}>{leader.name}</a> : "–"}
+    </div>
+    <div class="sub">
+      {others.length > 0
+        ? `${s.topWins} each, shared with ${others.map((o) => o.name).join(", ")}`
+        : `${s.topWins} ${s.topWins === 1 ? "win" : "wins"}`}
+    </div>
+  </div>
+</div>
+
+<style>
+  .scope-stats {
+    margin-top: 32px;
+  }
+  .value.name {
+    font-size: 26px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .value.name a {
+    color: inherit;
+  }
+  .sub a {
+    color: var(--accent-soft);
+  }
+  @media (max-width: 860px) {
+    .value.name {
+      font-size: 22px;
+    }
+  }
+</style>
