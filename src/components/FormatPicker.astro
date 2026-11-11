@@ -1,5 +1,6 @@
 ---
 import { getSiteData } from "../lib/site-data";
+import { groupByBlock } from "../data";
 import { href } from "../lib/format";
 
 interface Props {
@@ -8,52 +9,91 @@ interface Props {
 }
 const { current } = Astro.props;
 const { formats } = await getSiteData();
-// Newest format first, after "All time".
-const items = [{ label: "All time", url: href("/"), slug: null as string | null }, ...[...formats].reverse().map((f) => ({ label: f.name, url: href(`/formats/${f.slug}/`), slug: f.slug }))];
+// One compact select, whatever the number of formats: "All time", then each block's formats, newest first.
+const blocks = groupByBlock(formats);
 ---
 
 {
-  formats.length > 0 && (
-    <nav class="formats" aria-label="Standings by format">
-      {items.map((i) => (
-        <a href={i.url} aria-current={i.slug === current ? "page" : undefined}>
-          {i.label}
-        </a>
-      ))}
-    </nav>
+  blocks.length > 0 && (
+    <div class="fpick">
+      <label for="fpick-select">Showing</label>
+      <span class="fpick-field">
+        <select id="fpick-select">
+          <option value={href("/")} selected={current === null}>
+            All time
+          </option>
+          {blocks.map((b) => (
+            <optgroup label={b.name}>
+              {b.formats.map((f) => (
+                <option value={href(`/formats/${f.slug}/`)} selected={f.slug === current}>
+                  {f.name}
+                  {f.until === null ? " (current)" : ""}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+          <path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+    </div>
   )
 }
 
 <style>
-  .formats {
+  .fpick {
     display: flex;
-    gap: 4px;
-    margin: 16px 0 0;
-    overflow-x: auto;
-    border-bottom: 1px solid var(--line);
-    scrollbar-width: none;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 0;
   }
-  .formats a {
-    flex: none;
+  .fpick label {
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .fpick-field {
+    position: relative;
     display: inline-flex;
     align-items: center;
+    min-width: 0;
+  }
+  .fpick select {
+    appearance: none;
     min-height: 44px;
-    padding: 0 14px;
+    max-width: 100%;
+    padding: 0 36px 0 12px;
+    font: 500 15px/1 var(--font-text);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .fpick select:hover {
+    border-color: var(--faint);
+  }
+  .fpick select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .fpick option,
+  .fpick optgroup {
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .fpick svg {
+    position: absolute;
+    right: 12px;
     color: var(--muted);
-    font-size: 15px;
-    background: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .formats a:first-child {
-    padding-left: 0;
-  }
-  .formats a:hover {
-    color: var(--ink);
-  }
-  .formats a[aria-current="page"] {
-    color: var(--ink);
-    border-bottom-color: var(--accent);
+    pointer-events: none;
   }
 </style>
+
+<script>
+  const select = document.querySelector<HTMLSelectElement>("#fpick-select");
+  select?.addEventListener("change", () => {
+    location.href = select.value;
+  });
+</script>

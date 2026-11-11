@@ -1,4 +1,4 @@
-import { computeEvents, computeMovement, computeRounds, computeStandings, computeStreaks, computeSummary, formatFor, loadFormats, loadResults } from "../data";
+import { computeEvents, computeMovement, computeRounds, computeStandings, computeStreaks, computeSummary, formatFor, groupByBlock, loadFormats, loadResults } from "../data";
 import type { EventSummary, Format, PlayerStats, PlayerStreaks, ResultRow, ScopeSummary } from "../data";
 
 export interface FormatData extends Format {
@@ -35,6 +35,7 @@ export function getSiteData(): Promise<SiteData> {
   cached ??= (async () => {
     const [{ rows, issues }, formatsResult] = await Promise.all([loadResults(), loadFormats()]);
     for (const i of [...issues, ...formatsResult.issues]) console.warn(`[data] ${i.severity} line ${i.line}: ${i.message}`);
+    for (const b of groupByBlock(formatsResult.formats)) console.log(`[data] block ${b.name}: ${b.formats.map((f) => f.name).join(", ")}`);
 
     const standings = computeStandings(rows);
     const byFormat = new Map<string, ResultRow[]>();
