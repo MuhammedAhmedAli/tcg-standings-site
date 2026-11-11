@@ -102,3 +102,23 @@ export interface ScopeSummary {
   topWinners: { name: string; slug: string }[];
   topWins: number;
 }
+
+/** A run of consecutive events. `start`/`end` are ISO dates of the best run (absent when best is 0). */
+export interface Streak {
+  best: number;
+  /** Length of the run still going at the latest locals; 0 if it has ended. */
+  current: number;
+  start?: string;
+  end?: string;
+}
+
+export interface PlayerStreaks {
+  /** Consecutive locals attended (any missed locals breaks it). */
+  attendance: Streak;
+  /** Consecutive appearances finishing in the top 8 (weeks not attended don't break it). */
+  top8: Streak;
+  /** Consecutive appearances winning every round. */
+  undefeated: Streak;
+  /** Total appearances winning every round. */
+  undefeatedCount: number;
+}

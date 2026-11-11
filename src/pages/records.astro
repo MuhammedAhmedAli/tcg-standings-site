@@ -1,0 +1,118 @@
+---
+import Base from "../layouts/Base.astro";
+import { getSiteData } from "../lib/site-data";
+import { computeRecords } from "../lib/records";
+import { fmtDate, href } from "../lib/format";
+
+const data = await getSiteData();
+const boards = computeRecords(data);
+const first = data.events[0]!;
+---
+
+<Base title="Records · Jesters Locals" description="Jesters Locals records: most locals won, longest streaks, biggest fields won and more." section="records">
+  <p class="eyebrow">All time · {data.events.length} locals</p>
+  <h1 data-enter>Records</h1>
+  <p class="lede">The best runs and results at Jesters locals since {fmtDate(first.date)}. Tied players share a place.</p>
+
+  <div class="boards">
+    {
+      boards.map((b) => (
+        <section class="board" id={b.id} aria-labelledby={`${b.id}-h`}>
+          <h2 id={`${b.id}-h`}>{b.title}</h2>
+          {b.note && <p class="note">{b.note}</p>}
+          <ol>
+            {b.rows.map((r) => (
+              <li class:list={{ leader: r.rank === 1 }}>
+                <span class="rank">{r.rank}</span>
+                <span class="who">
+                  <a href={href(`/players/${r.slug}/`)}>{r.name}</a>
+                  {r.detail && <span class="detail">{r.detail}</span>}
+                </span>
+                <span class="val">{r.value}</span>
+              </li>
+            ))}
+          </ol>
+          {b.more && <p class="more">{b.more}</p>}
+        </section>
+      ))
+    }
+  </div>
+</Base>
+
+<style>
+  .boards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 20px;
+    margin-top: 40px;
+  }
+  .board {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 20px 22px 12px;
+  }
+  .board h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .note {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--faint);
+  }
+  ol {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+  }
+  li:first-child {
+    border-top: 0;
+  }
+  .more {
+    margin: 0;
+    padding: 10px 0 4px 36px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--faint);
+  }
+  .rank {
+    font: 500 12px/1 var(--font-mono);
+    color: var(--faint);
+  }
+  .leader .rank {
+    color: var(--accent-soft);
+  }
+  .who {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .who a {
+    color: var(--ink);
+  }
+  .leader .who a {
+    font-weight: 600;
+  }
+  .detail {
+    font-size: 13px;
+    color: var(--faint);
+  }
+  .val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .leader .val {
+    color: var(--accent-soft);
+  }
+</style>
