@@ -1,5 +1,5 @@
-import { computeEvents, computeMovement, computeStandings, computeSummary, formatFor, loadFormats, loadResults } from "../data";
-import type { EventSummary, Format, PlayerStats, ResultRow, ScopeSummary } from "../data";
+import { computeEvents, computeMovement, computeRounds, computeStandings, computeStreaks, computeSummary, formatFor, loadFormats, loadResults } from "../data";
+import type { EventSummary, Format, PlayerStats, PlayerStreaks, ResultRow, ScopeSummary } from "../data";
 
 export interface FormatData extends Format {
   standings: PlayerStats[];
@@ -17,6 +17,8 @@ export interface SiteData {
   summary: ScopeSummary;
   /** Places moved at the latest locals (positive = climbed, null = new). */
   movement?: Map<string, number | null>;
+  /** Attendance / top-8 / undefeated streaks by player name. */
+  streaks: Map<string, PlayerStreaks>;
   /** Overall standings position by player name (1-based). */
   position: Map<string, number>;
   /** Formats with at least one event, oldest first. */
@@ -63,9 +65,15 @@ export function getSiteData(): Promise<SiteData> {
     const formatOf = new Map<string, FormatData>();
     for (const f of formats) for (const e of f.events) formatOf.set(e.date, f);
 
+    const events = computeEvents(rows);
+    const allDates = events.map((e) => e.date);
+    const rounds = computeRounds(rows);
+    const streaks = new Map(standings.map((p) => [p.name, computeStreaks(p.history, allDates, rounds)]));
+
     return {
       standings,
-      events: computeEvents(rows),
+      streaks,
+      events,
       summary: computeSummary(rows),
       movement: computeMovement(rows),
       position: new Map(standings.map((p, i) => [p.name, i + 1])),

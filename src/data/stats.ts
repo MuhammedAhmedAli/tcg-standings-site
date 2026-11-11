@@ -1,4 +1,4 @@
-import type { EventSummary, PlayerStats, ResultRow, ScopeSummary } from "./types";
+import type { EventResult, EventSummary, PlayerStats, PlayerStreaks, ResultRow, ScopeSummary, Streak } from "./types";
 
 export function slugify(name: string): string {
   return name
@@ -92,6 +92,51 @@ export function computeMovement(rows: ResultRow[]): Map<string, number | null> |
   );
 }
 
+/** Rounds played at each event: the most matches anyone played there. */
+export function computeRounds(rows: ResultRow[]): Map<string, number> {
+  const rounds = new Map<string, number>();
+  for (const r of rows) rounds.set(r.date, Math.max(rounds.get(r.date) ?? 0, r.wins + r.losses + r.draws));
+  return rounds;
+}
+
+/** Longest and ongoing runs of `hit` over `dates` (chronological). `latest` = the most recent locals overall. */
+function runOf(dates: string[], hit: (date: string) => boolean, latest: string): Streak {
+  let run = 0;
+  let runStart = "";
+  const out: Streak = { best: 0, current: 0 };
+  let last = "";
+  for (const d of dates) {
+    if (hit(d)) {
+      if (run === 0) runStart = d;
+      run++;
+      if (run > out.best) Object.assign(out, { best: run, start: runStart, end: d });
+    } else run = 0;
+    last = d;
+  }
+  out.current = last === latest ? run : 0;
+  return out;
+}
+
+/**
+ * Attendance, top-8 and undefeated streaks for one player.
+ * `allDates` = every locals, chronological; `rounds` from computeRounds.
+ */
+export function computeStreaks(history: EventResult[], allDates: string[], rounds: Map<string, number>): PlayerStreaks {
+  const latest = allDates[allDates.length - 1] ?? "";
+  const byDate = new Map(history.map((h) => [h.date, h]));
+  const attended = history.map((h) => h.date);
+  const perfect = (d: string) => {
+    const h = byDate.get(d)!;
+    return h.wins > 0 && h.wins === rounds.get(d);
+  };
+  return {
+    attendance: runOf(allDates, (d) => byDate.has(d), latest),
+    top8: runOf(attended, (d) => byDate.get(d)!.rank <= 8, latest),
+    undefeated: runOf(attended, perfect, latest),
+    undefeatedCount: attended.filter(perfect).length,
+  };
+}
+
 export function computeEvents(rows: ResultRow[]): EventSummary[] {
   const byDate = new Map<string, ResultRow[]>();
   for (const row of rows) {
@@ -117,8 +162,7 @@ export function computeSummary(rows: ResultRow[]): ScopeSummary {
   for (const r of rows) if (r.rank === 1) firsts.set(r.player, (firsts.get(r.player) ?? 0) + 1);
   const topWins = Math.max(0, ...firsts.values());
   // Rounds at an event = the most matches anyone played there, so early drops on a perfect record don't count.
-  const rounds = new Map<string, number>();
-  for (const r of rows) rounds.set(r.date, Math.max(rounds.get(r.date) ?? 0, r.wins + r.losses + r.draws));
+  const rounds = computeRounds(rows);
   return {
     events: events.length,
     players: new Set(rows.map((r) => r.player)).size,

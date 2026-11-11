@@ -17,7 +17,7 @@ const fontFaces = `
 interface Props {
   title: string;
   description?: string;
-  section?: "standings" | "events";
+  section?: "standings" | "events" | "records";
 }
 const { title, description = "Jesters weekly locals: overall standings, player records and every event's results.", section } = Astro.props;
 const { events } = await getSiteData();
@@ -47,6 +47,7 @@ const last = events[events.length - 1];
         <nav aria-label="Main">
           <a href={href("/")} aria-current={section === "standings" ? "page" : undefined}>Standings</a>
           <a href={href("/events/")} aria-current={section === "events" ? "page" : undefined}>Events</a>
+          <a href={href("/records/")} aria-current={section === "records" ? "page" : undefined}>Records</a>
         </nav>
       </div>
     </header>

@@ -2,7 +2,8 @@
 import Base from "../../layouts/Base.astro";
 import PlacementChart from "../../components/PlacementChart.astro";
 import { getSiteData } from "../../lib/site-data";
-import { fmtDate, fmtPct, fmtTop, href, ordinal } from "../../lib/format";
+import { fmtDate, fmtPct, fmtShortDate, fmtTop, href, ordinal } from "../../lib/format";
+import type { Streak } from "../../data";
 import type { PlayerStats } from "../../data";
 
 export async function getStaticPaths() {
@@ -11,7 +12,7 @@ export async function getStaticPaths() {
 }
 
 const { player } = Astro.props as { player: PlayerStats };
-const { position, standings, formats, formatOf } = await getSiteData();
+const { position, standings, formats, formatOf, streaks } = await getSiteData();
 // This player's line in each format they played, newest format first.
 const byFormat = [...formats]
   .reverse()
@@ -21,6 +22,14 @@ const byFormat = [...formats]
   });
 const pos = position.get(player.name)!;
 const history = [...player.history].reverse();
+const st = streaks.get(player.name)!;
+const span = (s: Streak) =>
+  s.best === 0 ? "None yet" : s.current === s.best ? "Ongoing" : s.best === 1 ? fmtDate(s.start!) : `${fmtShortDate(s.start!)} to ${fmtDate(s.end!)}`;
+const streakTiles = [
+  { label: "Attendance streak", s: st.attendance, unit: ["local", "locals"], note: "in a row" },
+  { label: "Top-8 run", s: st.top8, unit: ["finish", "finishes"], note: "in a row" },
+  { label: "Undefeated run", s: st.undefeated, unit: ["night", "nights"], note: "in a row" },
+];
 const LATEST = 5;
 const recent = history.slice(0, LATEST);
 const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.length;
@@ -116,6 +125,31 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     )
   }
 
+
+  <h2>Streaks</h2>
+  <div class="stats streaks">
+    {
+      streakTiles.map(({ label, s, unit }) => (
+        <div class="stat">
+          <div class="label">{label}</div>
+          <div class="value">
+            {s.best}
+            <span class="unit">{unit[s.best === 1 ? 0 : 1]}</span>
+          </div>
+          <div class="sub">
+            {span(s)}
+            {s.current > 0 && s.current !== s.best && ` · current ${s.current}`}
+          </div>
+        </div>
+      ))
+    }
+    <div class="stat">
+      <div class="label">Undefeated nights</div>
+      <div class="value">{st.undefeatedCount}</div>
+      <div class="sub">of {player.events} played</div>
+    </div>
+  </div>
+
   {
     byFormat.length > 0 && (
       <>
@@ -168,6 +202,22 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
 </Base>
 
 <style>
+  .streaks {
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 20px;
+  }
+  .unit {
+    font-family: var(--font-text);
+    font-size: 15px;
+    letter-spacing: 0;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+  @media (max-width: 860px) {
+    .streaks {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
   .latest-head {
     display: flex;
     justify-content: space-between;
