@@ -2,40 +2,96 @@
 import Base from "../../layouts/Base.astro";
 import { getSiteData } from "../../lib/site-data";
 import { fmtDate, href } from "../../lib/format";
+import type { EventSummary } from "../../data";
 
-const { events, standings } = await getSiteData();
+const { events, standings, formatOf } = await getSiteData();
 const slugOf = new Map(standings.map((p) => [p.name, p.slug]));
-const rows = [...events].reverse();
+
+// Newest first, grouped by format. Weeks before the first format form their own group.
+const groups: { id: string; title: string; formatUrl?: string; events: EventSummary[] }[] = [];
+for (const e of [...events].reverse()) {
+  const f = formatOf.get(e.date);
+  const id = f?.slug ?? "before-formats";
+  let g = groups.find((x) => x.id === id);
+  if (!g) {
+    g = { id, title: f?.name ?? "Before the first format", formatUrl: f && href(`/formats/${f.slug}/`), events: [] };
+    groups.push(g);
+  }
+  g.events.push(e);
+}
 ---
 
 <Base title="Events · Jesters Locals" section="events">
   <p class="eyebrow">{events.length} weeks</p>
   <h1 data-enter>Every locals</h1>
-  <p class="lede">Each week's winner and turnout, newest first. Open a date for the full results.</p>
-  <div class="table-frame" style="margin-top:40px">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">Date</th>
-          <th scope="col" class="num">Players</th>
-          <th scope="col">Winner</th>
-        </tr>
-      </thead>
-      <tbody>
-        {
-          rows.map((e) => (
-            <tr>
-              <td class="date">
-                <a href={href(`/events/${e.date}/`)}>{fmtDate(e.date)}</a>
-              </td>
-              <td class="num">{e.entrants}</td>
-              <td class="player">
-                <a href={href(`/players/${slugOf.get(e.winner)}/`)}>{e.winner}</a>
-              </td>
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
-  </div>
+  <p class="lede">Each week's winner and turnout, newest first and grouped by format. Open a date for the full results.</p>
+
+  {
+    groups.map((g) => (
+      <section aria-labelledby={`h-${g.id}`}>
+        <div class="group-head" id={g.id}>
+          <h2 id={`h-${g.id}`}>{g.title}</h2>
+          <span class="mono muted">
+            {g.events.length} {g.events.length === 1 ? "week" : "weeks"}
+          </span>
+          {g.formatUrl && (
+            <a class="standings-link" href={g.formatUrl}>
+              {g.title} standings →
+            </a>
+          )}
+        </div>
+        <div class="table-frame">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col" class="num">Players</th>
+                <th scope="col">Winner</th>
+              </tr>
+            </thead>
+            <tbody>
+              {g.events.map((e) => (
+                <tr>
+                  <td class="date">
+                    <a href={href(`/events/${e.date}/`)}>{fmtDate(e.date)}</a>
+                  </td>
+                  <td class="num">{e.entrants}</td>
+                  <td class="player">
+                    <a href={href(`/players/${slugOf.get(e.winner)}/`)}>{e.winner}</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    ))
+  }
 </Base>
+
+<style>
+  .group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 48px 0 14px;
+    scroll-margin-top: 24px;
+  }
+  .group-head h2 {
+    margin: 0;
+  }
+  .standings-link {
+    margin-left: auto;
+    color: var(--accent-soft);
+    font-size: 15px;
+  }
+  table th:first-child,
+  table td:first-child {
+    width: 40%;
+  }
+  table th:nth-child(2),
+  table td:nth-child(2) {
+    width: 15%;
+  }
+</style>

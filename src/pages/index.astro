@@ -1,27 +1,15 @@
 ---
 import Base from "../layouts/Base.astro";
 import { getSiteData } from "../lib/site-data";
-import { fmtDate, fmtPct, href, ordinal } from "../lib/format";
+import StandingsTable from "../components/StandingsTable.astro";
+import FormatPicker from "../components/FormatPicker.astro";
+import { fmtDate, href, ordinal } from "../lib/format";
 
 const { standings, events } = await getSiteData();
 const latest = events[events.length - 1]!;
 const podium = standings
   .flatMap((p) => p.history.filter((h) => h.date === latest.date && h.rank <= 3).map((h) => ({ ...h, name: p.name, slug: p.slug })))
   .sort((a, b) => a.rank - b.rank);
-
-// Columns: key, label, numeric?, default sort direction when first clicked.
-const cols = [
-  { key: "pos", label: "#", num: true, dir: "ascending" },
-  { key: "name", label: "Player", num: false, dir: "ascending" },
-  { key: "points", label: "Points", num: true, dir: "descending" },
-  { key: "events", label: "Events", num: true, dir: "descending" },
-  { key: "record", label: "W-L-D", num: true, dir: "descending" },
-  { key: "win", label: "Win rate", num: true, dir: "descending" },
-  { key: "tie", label: "Tie rate", num: true, dir: "descending" },
-  { key: "avg", label: "Avg finish", num: true, dir: "ascending" },
-  { key: "best", label: "Best", num: true, dir: "ascending" },
-  { key: "firsts", label: "Event wins", num: true, dir: "descending" },
-] as const;
 ---
 
 <Base title="Jesters Locals standings" section="standings">
@@ -54,84 +42,8 @@ const cols = [
   </section>
 
   <h2 id="table-h">All players</h2>
-  <div class="toolbar">
-    <label class="field">
-      Find a player
-      <input id="filter" type="search" placeholder="Name" autocomplete="off" />
-    </label>
-    <label class="field">
-      Played at least
-      <select id="min-events">
-        <option value="1">Any number of events</option>
-        <option value="3">3 events</option>
-        <option value="5">5 events</option>
-        <option value="10">10 events</option>
-      </select>
-    </label>
-  </div>
-
-  <div class="table-frame">
-    <table id="standings" aria-labelledby="table-h">
-      <thead>
-        <tr>
-          {
-            cols.map((c) => (
-              <th
-                class:list={[{ num: c.num, sticky: c.key === "name" }]}
-                data-key={c.key}
-                data-dir={c.dir}
-                aria-sort={c.key === "pos" ? "ascending" : undefined}
-                scope="col"
-              >
-                <button type="button">{c.label}</button>
-              </th>
-            ))
-          }
-        </tr>
-      </thead>
-      <tbody>
-        {
-          standings.map((p, i) => (
-            <tr
-              data-name={p.name.toLowerCase()}
-              data-events={p.events}
-              data-pos={i + 1}
-              data-points={p.points}
-              data-record={p.wins * 1e6 + p.draws * 1e3 - p.losses}
-              data-win={p.winRate}
-              data-tie={p.tieRate}
-              data-avg={p.averageFinish}
-              data-best={p.bestFinish}
-              data-firsts={p.firsts}
-            >
-              <td class:list={["num pos", { "is-podium": i < 3 }]}>{i + 1}</td>
-              <td class="sticky player">
-                <a href={href(`/players/${p.slug}/`)}>{p.name}</a>
-              </td>
-              <td class="num">{p.points}</td>
-              <td class="num">{p.events}</td>
-              <td class="num">
-                {p.wins}-{p.losses}-{p.draws}
-              </td>
-              <td class="num">
-                <span class="rate">
-                  <span class="bar" aria-hidden="true">
-                    <i style={`width:${(p.winRate * 100).toFixed(1)}%`} />
-                  </span>
-                  {fmtPct(p.winRate)}
-                </span>
-              </td>
-              <td class="num">{fmtPct(p.tieRate)}</td>
-              <td class="num">{p.averageFinish.toFixed(1)}</td>
-              <td class="num">{ordinal(p.bestFinish)}</td>
-              <td class="num">{p.firsts || <span class="muted">0</span>}</td>
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
-  </div>
-  <p id="empty" class="muted" hidden>No players match that search. Clear the name or lower the event count.</p>
+  <FormatPicker current={null} />
+  <StandingsTable standings={standings} labelledby="table-h" />
 </Base>
 
 <style>
@@ -216,47 +128,4 @@ const cols = [
     margin-top: 64px;
     margin-bottom: 0;
   }
-  .toolbar {
-    margin-top: 20px;
-  }
 </style>
-
-<script>
-  const table = document.getElementById("standings") as HTMLTableElement;
-  const tbody = table.tBodies[0]!;
-  const rows = Array.from(tbody.rows);
-  const filter = document.getElementById("filter") as HTMLInputElement;
-  const minEvents = document.getElementById("min-events") as HTMLSelectElement;
-  const empty = document.getElementById("empty")!;
-
-  function applyFilter() {
-    const q = filter.value.trim().toLowerCase();
-    const min = Number(minEvents.value);
-    let shown = 0;
-    for (const r of rows) {
-      const ok = r.dataset.name!.includes(q) && Number(r.dataset.events) >= min;
-      r.hidden = !ok;
-      if (ok) shown++;
-    }
-    empty.hidden = shown > 0;
-  }
-  filter.addEventListener("input", applyFilter);
-  minEvents.addEventListener("change", applyFilter);
-
-  for (const th of Array.from(table.tHead!.rows[0]!.cells)) {
-    th.querySelector("button")!.addEventListener("click", () => {
-      const key = th.dataset.key!;
-      const current = th.getAttribute("aria-sort");
-      const dir = current ? (current === "ascending" ? "descending" : "ascending") : th.dataset.dir!;
-      for (const other of Array.from(th.parentElement!.children)) other.removeAttribute("aria-sort");
-      th.setAttribute("aria-sort", dir);
-      const sign = dir === "ascending" ? 1 : -1;
-      const val = (r: HTMLTableRowElement) => r.dataset[key]!;
-      const sorted = [...rows].sort((a, b) => {
-        const cmp = key === "name" ? val(a).localeCompare(val(b)) : Number(val(a)) - Number(val(b));
-        return cmp * sign || Number(a.dataset.pos) - Number(b.dataset.pos);
-      });
-      tbody.append(...sorted);
-    });
-  }
-</script>

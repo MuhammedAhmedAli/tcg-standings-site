@@ -10,7 +10,8 @@ export async function getStaticPaths() {
 }
 
 const { event } = Astro.props as { event: EventSummary };
-const { standings } = await getSiteData();
+const { standings, formatOf } = await getSiteData();
+const format = formatOf.get(event.date);
 
 // Rebuild this event's table from each player's history.
 const results = standings
@@ -20,7 +21,7 @@ const results = standings
 
 <Base title={`${fmtDate(event.date)} · Jesters Locals`} section="events">
   <a class="back" href={href("/events/")}>← Every locals</a>
-  <p class="eyebrow">{event.entrants} players</p>
+  <p class="eyebrow">{format ? `${format.name} · ` : ""}{event.entrants} players</p>
   <h1 data-enter>{fmtDate(event.date)}</h1>
   <p class="lede">Won by {event.winner}. Final standings in finishing order.</p>
   <div class="table-frame" style="margin-top:40px">

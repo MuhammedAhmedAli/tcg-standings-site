@@ -1,0 +1,59 @@
+---
+import { getSiteData } from "../lib/site-data";
+import { href } from "../lib/format";
+
+interface Props {
+  /** Current format slug, or null for all time. */
+  current: string | null;
+}
+const { current } = Astro.props;
+const { formats } = await getSiteData();
+// Newest format first, after "All time".
+const items = [{ label: "All time", url: href("/"), slug: null as string | null }, ...[...formats].reverse().map((f) => ({ label: f.name, url: href(`/formats/${f.slug}/`), slug: f.slug }))];
+---
+
+{
+  formats.length > 0 && (
+    <nav class="formats" aria-label="Standings by format">
+      {items.map((i) => (
+        <a href={i.url} aria-current={i.slug === current ? "page" : undefined}>
+          {i.label}
+        </a>
+      ))}
+    </nav>
+  )
+}
+
+<style>
+  .formats {
+    display: flex;
+    gap: 4px;
+    margin: 16px 0 0;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--line);
+    scrollbar-width: none;
+  }
+  .formats a {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    color: var(--muted);
+    font-size: 15px;
+    background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .formats a:first-child {
+    padding-left: 0;
+  }
+  .formats a:hover {
+    color: var(--ink);
+  }
+  .formats a[aria-current="page"] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+</style>

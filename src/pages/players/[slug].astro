@@ -11,7 +11,14 @@ export async function getStaticPaths() {
 }
 
 const { player } = Astro.props as { player: PlayerStats };
-const { position, standings } = await getSiteData();
+const { position, standings, formats, formatOf } = await getSiteData();
+// This player's line in each format they played, newest format first.
+const byFormat = [...formats]
+  .reverse()
+  .flatMap((f) => {
+    const i = f.standings.findIndex((p) => p.name === player.name);
+    return i === -1 ? [] : [{ format: f, stats: f.standings[i]!, pos: i + 1, of: f.standings.length }];
+  });
 const pos = position.get(player.name)!;
 const history = [...player.history].reverse();
 ---
@@ -50,6 +57,50 @@ const history = [...player.history].reverse();
     </div>
   </div>
 
+  {
+    byFormat.length > 0 && (
+      <>
+        <h2>By format</h2>
+        <div class="table-frame">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Format</th>
+                <th scope="col" class="num">Position</th>
+                <th scope="col" class="num">Events</th>
+                <th scope="col" class="num">W-L-D</th>
+                <th scope="col" class="num">Win rate</th>
+                <th scope="col" class="num">Tie rate</th>
+                <th scope="col" class="num">Avg finish</th>
+                <th scope="col" class="num">Best</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byFormat.map(({ format, stats, pos, of }) => (
+                <tr>
+                  <td class="player">
+                    <a href={href(`/formats/${format.slug}/`)}>{format.name}</a>
+                  </td>
+                  <td class:list={["num pos", { "is-podium": pos <= 3 }]}>
+                    {ordinal(pos)} <span class="muted">/ {of}</span>
+                  </td>
+                  <td class="num">{stats.events}</td>
+                  <td class="num">
+                    {stats.wins}-{stats.losses}-{stats.draws}
+                  </td>
+                  <td class="num">{fmtPct(stats.winRate)}</td>
+                  <td class="num">{fmtPct(stats.tieRate)}</td>
+                  <td class="num">{stats.averageFinish.toFixed(1)}</td>
+                  <td class="num">{ordinal(stats.bestFinish)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    )
+  }
+
   <h2>Finish by week</h2>
   <PlacementChart history={player.history} />
 
@@ -59,6 +110,7 @@ const history = [...player.history].reverse();
       <thead>
         <tr>
           <th scope="col">Date</th>
+          <th scope="col">Format</th>
           <th scope="col" class="num">Finish</th>
           <th scope="col" class="num">W-L-D</th>
           <th scope="col" class="num">OWP</th>
@@ -72,6 +124,7 @@ const history = [...player.history].reverse();
               <td class="date">
                 <a href={href(`/events/${h.date}/`)}>{fmtDate(h.date)}</a>
               </td>
+              <td class="muted">{formatOf.get(h.date)?.name ?? "–"}</td>
               <td class:list={["num pos", { "is-podium": h.rank <= 3 }]}>
                 {ordinal(h.rank)} <span class="muted">/ {h.entrants}</span>
               </td>
