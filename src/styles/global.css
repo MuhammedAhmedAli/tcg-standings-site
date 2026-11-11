@@ -332,10 +332,12 @@ th[aria-sort="descending"] button::after {
   color: var(--accent-soft);
 }
 
-/* Win-rate bar: one series, the bar shows magnitude, the number carries the value. */
+/* Win-rate bar: one series, the bar shows magnitude, the number carries the value.
+   The value gets a fixed width (fits "100.0%") so the bar sits in the same place on every row. */
 .rate {
+  --rate-val-w: 6ch;
   display: inline-grid;
-  grid-template-columns: 56px auto;
+  grid-template-columns: 56px var(--rate-val-w);
   align-items: center;
   gap: 10px;
   justify-content: end;
@@ -345,6 +347,9 @@ th[aria-sort="descending"] button::after {
   border-radius: 2px;
   background: var(--line-strong);
   overflow: hidden;
+}
+.rate .val {
+  text-align: right;
 }
 .rate .bar i {
   display: block;
