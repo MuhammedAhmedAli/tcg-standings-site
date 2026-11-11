@@ -123,19 +123,38 @@ header.site nav {
 .brand {
   white-space: nowrap;
 }
+/* Phones: brand and search on the first row, the section links on a row of their own below. */
 @media (max-width: 720px) {
   header.site .wrap {
-    gap: 2px;
+    flex-wrap: wrap;
+    gap: 0 4px;
+    min-height: 0;
+    padding-top: 6px;
   }
   .brand {
     font-size: 16px;
     gap: 8px;
   }
+  header.site .psearch {
+    margin-left: auto;
+  }
   header.site nav {
+    order: 3;
+    flex-basis: 100%;
+    margin: 0 0 0 -8px;
     gap: 0;
   }
   header.site nav a {
     padding: 0 8px;
+    min-height: 40px;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+  }
+  header.site nav a:hover {
+    background: none;
+  }
+  header.site nav a[aria-current="page"] {
+    border-bottom-color: var(--accent);
   }
 }
 header.site nav a {
