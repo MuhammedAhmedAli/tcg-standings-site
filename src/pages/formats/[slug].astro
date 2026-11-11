@@ -1,0 +1,36 @@
+---
+import Base from "../../layouts/Base.astro";
+import StandingsTable from "../../components/StandingsTable.astro";
+import FormatPicker from "../../components/FormatPicker.astro";
+import { getSiteData, type FormatData } from "../../lib/site-data";
+import { fmtDate, href } from "../../lib/format";
+
+export async function getStaticPaths() {
+  const { formats } = await getSiteData();
+  return formats.map((format) => ({ params: { slug: format.slug }, props: { format } }));
+}
+
+const { format } = Astro.props as { format: FormatData };
+const first = format.events[0]!;
+const last = format.events[format.events.length - 1]!;
+const current = format.until === null;
+---
+
+<Base title={`${format.name} standings · Jesters Locals`} description={`Jesters Locals standings for ${format.name}: ${format.standings.length} players over ${format.events.length} weeks.`} section="standings">
+  <p class="eyebrow">Format · {current ? "current" : `${fmtDate(first.date)} to ${fmtDate(last.date)}`}</p>
+  <h1 data-enter>{format.name} standings</h1>
+  <p class="lede">
+    {format.standings.length} players over {format.events.length} {format.events.length === 1 ? "week" : "weeks"}, since {format.name} became legal on {fmtDate(format.start)}.
+    <a href={href(`/events/#${format.slug}`)}>See its events</a>.
+  </p>
+
+  <h2 id="table-h">Players in {format.name}</h2>
+  <FormatPicker current={format.slug} />
+  <StandingsTable standings={format.standings} labelledby="table-h" />
+</Base>
+
+<style>
+  .lede a {
+    color: var(--accent-soft);
+  }
+</style>

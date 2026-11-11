@@ -24,7 +24,14 @@ Static [Astro](https://astro.build) site, built from the sheet at build time:
 
 - `/`: overall standings (sortable, searchable, filter by minimum events)
 - `/players/<name>/`: win/tie rate, record, finishes, finish-by-week chart, event history
-- `/events/` and `/events/<date>/`: every locals and its full results
+- `/formats/<name>/`: standings for one format (picker above every standings table)
+- `/events/` and `/events/<date>/`: every locals, grouped by format, and its full results
+
+### Formats
+
+A second published tab lists one row per format: its name and the date it became legal (DD/MM/YY).
+Each format runs until the next one starts; weeks before the first start date belong to no format.
+Override the source with `FORMATS_CSV_URL` / `FORMATS_CSV_FILE`.
 
 ## Commands
 
