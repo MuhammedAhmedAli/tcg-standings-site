@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import { getSiteData } from "../lib/site-data";
 import { fmtDate, href } from "../lib/format";
+import PlayerSearch from "../components/PlayerSearch.astro";
 // Self-hosted, latin-only fonts: served from the same origin as the page, so no Google Fonts round trips.
 import soraUrl from "@fontsource-variable/sora/files/sora-latin-wght-normal.woff2?url";
 import figtreeUrl from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
@@ -48,6 +49,7 @@ const last = events[events.length - 1];
           <a href={href("/")} aria-current={section === "standings" ? "page" : undefined}>Standings</a>
           <a href={href("/events/")} aria-current={section === "events" ? "page" : undefined}>Events</a>
         </nav>
+        <PlayerSearch />
       </div>
     </header>
     <main id="main" class="wrap">
@@ -59,6 +61,9 @@ const last = events[events.length - 1];
         {last && <span class="mono">{events.length} events · last {fmtDate(last.date)}</span>}
       </div>
     </footer>
+    <script>
+      import "../scripts/pinned-head";
+    </script>
   </body>
 </html>
 

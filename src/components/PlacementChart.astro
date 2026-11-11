@@ -8,70 +8,80 @@ interface Props {
 const { history } = Astro.props;
 
 // Finish position per event, 1st at the top. Y axis runs to the largest field this player was in.
-const W = 720;
-const H = 240;
-const pad = { top: 16, right: 16, bottom: 32, left: 40 };
-const iw = W - pad.left - pad.right;
-const ih = H - pad.top - pad.bottom;
+// Drawn twice: a wide chart, and a narrow one for phones, so labels stay readable at real size
+// instead of shrinking or forcing the chart to scroll sideways.
 const maxRank = Math.max(...history.map((h) => h.entrants), 2);
 const n = history.length;
-
+const step = maxRank > 20 ? 10 : 5;
+const yTicks = [1, ...Array.from({ length: Math.floor(maxRank / step) }, (_, i) => (i + 1) * step)];
 // X is real time, so gaps between events show as gaps.
 const t = (iso: string) => Date.parse(`${iso}T00:00:00Z`);
 const t0 = t(history[0]!.date);
 const span = t(history[n - 1]!.date) - t0;
-const x = (i: number) => pad.left + (span === 0 ? iw / 2 : ((t(history[i]!.date) - t0) / span) * iw);
-const y = (rank: number) => pad.top + ((rank - 1) / (maxRank - 1)) * ih;
 
-const step = maxRank > 20 ? 10 : 5;
-const yTicks = [1, ...Array.from({ length: Math.floor(maxRank / step) }, (_, i) => (i + 1) * step)];
-// Label first, last, and others only where they won't collide (~70px apart).
-const labelled = new Set<number>();
-let lastX = -Infinity;
-history.forEach((_, i) => {
-  const px = x(i);
-  const fitsBeforeEnd = i === n - 1 || x(n - 1) - px >= 70;
-  if (px - lastX >= 70 && fitsBeforeEnd) {
-    labelled.add(i);
-    lastX = px;
-  }
-});
-labelled.add(n - 1);
-const points = history.map((h, i) => ({ ...h, cx: x(i), cy: y(h.rank) }));
-const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(" ");
+function layout(W: number, H: number, dotR: number) {
+  const pad = { top: 16, right: 16, bottom: 32, left: 40 };
+  const iw = W - pad.left - pad.right;
+  const ih = H - pad.top - pad.bottom;
+  const x = (i: number) => pad.left + (span === 0 ? iw / 2 : ((t(history[i]!.date) - t0) / span) * iw);
+  const y = (rank: number) => pad.top + ((rank - 1) / (maxRank - 1)) * ih;
+  // Label first, last, and others only where they won't collide (~70px apart).
+  const labelled = new Set<number>();
+  let lastX = -Infinity;
+  history.forEach((_, i) => {
+    const px = x(i);
+    const fitsBeforeEnd = i === n - 1 || x(n - 1) - px >= 70;
+    if (px - lastX >= 70 && fitsBeforeEnd) {
+      labelled.add(i);
+      lastX = px;
+    }
+  });
+  labelled.add(n - 1);
+  const points = history.map((h, i) => ({ ...h, cx: x(i), cy: y(h.rank) }));
+  const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toFixed(1)}`).join(" ");
+  return { W, H, pad, y, labelled, points, path, dotR };
+}
+const charts = [
+  { cls: "wide", ...layout(720, 240, 4.5) },
+  { cls: "narrow", ...layout(340, 220, n > 30 ? 3 : 3.5) },
+];
 ---
 
 <figure class="chart">
-  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Finishing position at each event, first place at the top">
-    {
-      yTicks.map((t) => (
-        <g>
-          <line class="grid" x1={pad.left} x2={W - pad.right} y1={y(t)} y2={y(t)} />
-          <text class="axis" x={pad.left - 8} y={y(t)} dy="0.32em" text-anchor="end">
-            {ordinal(t)}
-          </text>
-        </g>
-      ))
-    }
-    {
-      points.map((p, i) =>
-        labelled.has(i) ? (
-          <text class="axis" x={p.cx} y={H - 10} text-anchor="middle">
-            {fmtShortDate(p.date)}
-          </text>
-        ) : null,
-      )
-    }
-    {n > 1 && <path class="line" d={path} />}
-    {
-      points.map((p) => (
-        <g class="pt" tabindex="0" data-tip={`${fmtDate(p.date)}\n${ordinal(p.rank)} of ${p.entrants} · ${p.wins}-${p.losses}-${p.draws}`}>
-          <circle class="hit" cx={p.cx} cy={p.cy} r="12" />
-          <circle class="dot" cx={p.cx} cy={p.cy} r="4.5" />
-        </g>
-      ))
-    }
-  </svg>
+  {
+    charts.map((c) => (
+    <svg class={c.cls} viewBox={`0 0 ${c.W} ${c.H}`} role="img" aria-label="Finishing position at each event, first place at the top">
+      {
+        yTicks.map((t) => (
+          <g>
+            <line class="grid" x1={c.pad.left} x2={c.W - c.pad.right} y1={c.y(t)} y2={c.y(t)} />
+            <text class="axis" x={c.pad.left - 8} y={c.y(t)} dy="0.32em" text-anchor="end">
+              {ordinal(t)}
+            </text>
+          </g>
+        ))
+      }
+      {
+        c.points.map((p, i) =>
+          c.labelled.has(i) ? (
+            <text class="axis" x={p.cx} y={c.H - 10} text-anchor="middle">
+              {fmtShortDate(p.date)}
+            </text>
+          ) : null,
+        )
+      }
+      {n > 1 && <path class="line" d={c.path} />}
+      {
+        c.points.map((p) => (
+          <g class="pt" tabindex="0" data-tip={`${fmtDate(p.date)}\n${ordinal(p.rank)} of ${p.entrants} · ${p.wins}-${p.losses}-${p.draws}`}>
+            <circle class="hit" cx={p.cx} cy={p.cy} r="12" />
+            <circle class="dot" cx={p.cx} cy={p.cy} r={c.dotR} />
+          </g>
+        ))
+      }
+    </svg>
+    ))
+  }
   <div class="tip" role="status" hidden></div>
 </figure>
 
@@ -83,14 +93,23 @@ const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toF
     border-radius: var(--radius);
     background: var(--surface);
     padding: 12px 8px 4px;
-    overflow-x: auto;
   }
   svg {
     display: block;
     width: 100%;
-    min-width: 600px;
     height: auto;
     overflow: visible;
+  }
+  svg.narrow {
+    display: none;
+  }
+  @media (max-width: 600px) {
+    svg.wide {
+      display: none;
+    }
+    svg.narrow {
+      display: block;
+    }
   }
   .grid {
     stroke: var(--grid);
@@ -141,25 +160,25 @@ const path = points.map((p, i) => `${i ? "L" : "M"}${p.cx.toFixed(1)},${p.cy.toF
 
 <script>
   for (const fig of Array.from(document.querySelectorAll<HTMLElement>("figure.chart"))) {
-    // On narrow screens the chart scrolls sideways: start at the newest weeks, not the oldest.
-    fig.scrollLeft = fig.scrollWidth;
     const tip = fig.querySelector<HTMLElement>(".tip")!;
-    const svg = fig.querySelector("svg")!;
     const show = (g: SVGGElement) => {
       const dot = g.querySelector<SVGCircleElement>(".dot")!;
       const box = dot.getBoundingClientRect();
       const host = fig.getBoundingClientRect();
       tip.textContent = g.dataset.tip ?? "";
-      tip.style.left = `${box.left + box.width / 2 - host.left + fig.scrollLeft}px`;
+      tip.hidden = false;
+      // Centre the tip on the point, but keep it inside the chart near the left and right edges.
+      const half = tip.offsetWidth / 2 + 4;
+      const cx = box.left + box.width / 2 - host.left;
+      tip.style.left = `${Math.min(Math.max(cx, half), host.width - half)}px`;
       const top = box.top - host.top;
-      // Near the top edge the figure's scroll box would clip the tip, so drop it below the point.
+      // Near the top edge, drop the tip below the point so it stays inside the chart.
       const below = top < 56;
       tip.style.top = `${below ? box.bottom - host.top : top}px`;
       tip.style.transform = below ? "translate(-50%, 10px)" : "";
-      tip.hidden = false;
     };
     const hide = () => (tip.hidden = true);
-    for (const g of Array.from(svg.querySelectorAll<SVGGElement>(".pt"))) {
+    for (const g of Array.from(fig.querySelectorAll<SVGGElement>(".pt"))) {
       g.addEventListener("mouseenter", () => show(g));
       g.addEventListener("focus", () => show(g));
       g.addEventListener("mouseleave", hide);

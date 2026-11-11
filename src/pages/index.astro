@@ -160,11 +160,30 @@ const podium = standings
     }
     .place-name,
     .place-1 .place-name {
-      font-size: 22px;
+      font-size: 19px;
+    }
+    .latest {
+      margin-top: 24px;
+      padding: 16px 16px 8px;
+    }
+    .podium {
+      margin-top: 8px;
+    }
+    .place,
+    .place:first-child {
+      padding: 9px 0;
+    }
+    .latest-head h2 {
+      font-size: 16px;
     }
   }
   h2#table-h {
     margin-top: 64px;
     margin-bottom: 0;
+  }
+  @media (max-width: 600px) {
+    h2#table-h {
+      margin-top: 40px;
+    }
   }
 </style>
