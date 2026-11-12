@@ -27,9 +27,19 @@ function reset() {
   bar?.classList.remove("is-on");
 }
 
+/**
+ * A table row's main link (marked data-row-link), for a press anywhere else in the row. Presses on
+ * another link or control in the row, and drags that select text, are left alone.
+ */
+function rowLink(target: EventTarget | null): HTMLAnchorElement | null {
+  const el = target as Element | null;
+  if (!el?.closest || el.closest("a, button, input, select, summary, label")) return null;
+  return el.closest("tr")?.querySelector<HTMLAnchorElement>("a[data-row-link]") ?? null;
+}
+
 /** Same-site link to another page, followed in this tab. */
 function pageLink(target: EventTarget | null): HTMLAnchorElement | null {
-  const a = (target as Element | null)?.closest?.("a");
+  const a = (target as Element | null)?.closest?.("a") ?? rowLink(target);
   if (!a || !a.href || a.target || a.hasAttribute("download")) return null;
   const to = new URL(a.href);
   if (to.origin !== location.origin) return null;
@@ -75,6 +85,20 @@ document.addEventListener("click", (e) => {
   if (pageLink(e.target)) start();
 });
 document.addEventListener("nav:start", start);
+
+// Whole-row links. A plain press clicks the row's link, so the handler above starts the bar;
+// Ctrl/Cmd-click and middle-click open it in a new tab, as they would on the link itself.
+document.addEventListener("click", (e) => {
+  if (e.defaultPrevented || e.button !== 0) return;
+  const a = rowLink(e.target);
+  if (!a || getSelection()?.toString()) return;
+  if (e.metaKey || e.ctrlKey) window.open(a.href, "_blank", "noopener");
+  else a.click();
+});
+document.addEventListener("auxclick", (e) => {
+  const a = e.button === 1 ? rowLink(e.target) : null;
+  if (a) window.open(a.href, "_blank", "noopener");
+});
 
 // Coming back with the back button restores this page from memory, bar and all: clear it.
 window.addEventListener("pageshow", reset);

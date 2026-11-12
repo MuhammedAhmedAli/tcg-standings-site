@@ -26,8 +26,10 @@ const lead = leader && second ? leader.points - second.points : null;
       <p class="eyebrow">Season to date · {events.length} weeks</p>
       <h1 data-enter>Overall standings</h1>
       <p class="lede">
-        {standings.length} players across every Jesters locals since {fmtDate(events[0]!.date)}. Three points a win, one a draw; level points are split by average OWP, then OOWP.
+        {standings.length} players across every Jesters locals since {fmtDate(events[0]!.date)}.
+        <span class="lede-rules">Three points a win, one a draw; level points are split by average OWP, then OOWP.</span>
       </p>
+      <a class="jump-table" href="#table-h">Jump to the table <span aria-hidden="true">↓</span></a>
       <ScopeStats summary={summary} strip />
     </div>
     {
@@ -138,7 +140,7 @@ const lead = leader && second ? leader.points - second.points : null;
               {[...formats].reverse().map((f) => (
                 <tr>
                   <td class="player">
-                    <a href={href(`/formats/${f.slug}/`)}>{f.name}</a>
+                    <a href={href(`/formats/${f.slug}/`)} data-row-link>{f.name}</a>
                   </td>
                   <td class="num">{f.summary.events}</td>
                   <td class="num">{f.summary.players}</td>
@@ -424,10 +426,113 @@ const lead = leader && second ? leader.points - second.points : null;
   h2#table-h {
     margin-top: 64px;
     margin-bottom: 0;
+    scroll-margin-top: 16px;
   }
+  .jump-table {
+    display: none;
+  }
+
+  /*
+   * Phones: the standings are what most people come for, so the season summary above them is
+   * kept short. The scoring rules stay on wider screens; the leader card puts the points beside the name and
+   * each latest-locals finisher fits on one line; and a link under the intro jumps straight to the table.
+   */
   @media (max-width: 600px) {
     h2#table-h {
-      margin-top: 40px;
+      margin-top: 36px;
+    }
+    .lede {
+      font-size: 16px;
+    }
+    .lede-rules {
+      display: none;
+    }
+    .jump-table {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: start;
+      min-height: 36px;
+      margin-top: 12px;
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--surface);
+      transition: transform 160ms var(--ease);
+    }
+    .jump-table:active {
+      transform: scale(0.97);
+    }
+    .hero {
+      gap: 20px;
+    }
+    .leader {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 16px;
+      padding: 16px 18px;
+    }
+    .leader-k,
+    .leader-meta,
+    .leader-gap {
+      grid-column: 1 / -1;
+    }
+    .leader-name {
+      grid-column: 1;
+      margin-top: 8px;
+      font-size: 28px;
+    }
+    .leader-pts {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: end;
+      margin-top: 0 !important;
+      padding-top: 0;
+      gap: 6px;
+      font-size: 14px;
+    }
+    .leader-num {
+      font-size: 34px;
+    }
+    .leader-meta {
+      margin-top: 6px !important;
+      font-size: 13.5px;
+    }
+    .leader-gap {
+      margin-top: 4px !important;
+      font-size: 13.5px;
+    }
+    .latest {
+      margin-top: 20px;
+    }
+    .winner {
+      gap: 6px;
+      padding-bottom: 12px;
+    }
+    .winner-name {
+      font-size: 26px;
+    }
+    .chasers li {
+      grid-template-columns: 30px minmax(0, 1fr) 52px 104px;
+      gap: 8px;
+      padding: 8px 0;
+    }
+    .chaser-name {
+      font-size: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .chasers .rec {
+      white-space: nowrap;
+    }
+    .chaser-pos {
+      grid-column: auto;
+      margin-top: 0;
+      text-align: right;
     }
   }
 </style>

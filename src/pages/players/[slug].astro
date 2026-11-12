@@ -129,7 +129,7 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
           history.map((h, i) => (
             <tr class:list={{ more: i >= LATEST }}>
               <td class="date">
-                <a href={href(`/events/${h.date}/`)}>{fmtDate(h.date)}</a>
+                <a href={href(`/events/${h.date}/`)} data-row-link>{fmtDate(h.date)}</a>
               </td>
               <td class="muted">{formatOf.get(h.date)?.name ?? "–"}</td>
               <td class:list={["num pos", { "is-podium": h.rank <= 3 }]}>
@@ -206,7 +206,7 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
               {byFormat.map(({ format, stats, pos, of }) => (
                 <tr>
                   <td class="player">
-                    <a href={href(`/formats/${format.slug}/`)}>{format.name}</a>
+                    <a href={href(`/formats/${format.slug}/`)} data-row-link>{format.name}</a>
                   </td>
                   <td class:list={["num pos", { "is-podium": pos <= 3 }]}>
                     {ordinal(pos)} <span class="muted">/ {of}</span>
