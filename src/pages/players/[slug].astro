@@ -5,7 +5,7 @@ import SeasonGrid from "../../components/SeasonGrid.astro";
 import FinishBreakdown from "../../components/FinishBreakdown.astro";
 import Milestones from "../../components/Milestones.astro";
 import { getSiteData } from "../../lib/site-data";
-import { fmtDate, fmtPct, fmtShortDate, fmtTop, href, ordinal } from "../../lib/format";
+import { fmtDate, fmtPct, fmtShortDate, fmtTop, href, ordinal, plural } from "../../lib/format";
 import type { Streak } from "../../data";
 import type { PlayerStats } from "../../data";
 
@@ -38,12 +38,12 @@ const recent = history.slice(0, LATEST);
 const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.length;
 ---
 
-<Base title={`${player.name} · Jesters Locals`} description={`${player.name} at Jesters Locals: ${player.events} events, ${fmtPct(player.winRate)} win rate.`} section="standings">
+<Base title={`${player.name} · Jesters Locals`} description={`${player.name} at Jesters Locals: ${plural(player.events, "event")}, ${fmtPct(player.winRate)} win rate.`} section="standings">
   <a class="back" id="back" href={href("/")} data-formats={JSON.stringify(formats.map((f) => [f.slug, f.name]))}>← All standings</a>
   <p class="eyebrow">{ordinal(pos)} of {standings.length} overall</p>
   <h1 data-enter>{player.name}</h1>
   <p class="lede">
-    {player.events} events, from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}.
+    {plural(player.events, "event")}, {player.firstEvent === player.lastEvent ? `on ${fmtDate(player.firstEvent)}` : `from ${fmtDate(player.firstEvent)} to ${fmtDate(player.lastEvent)}`}.
     <a class="compare" href={href(`/compare/?a=${player.slug}`)}>Compare with another player →</a>
   </p>
 
@@ -51,12 +51,12 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     <div class="stat">
       <div class="label">Win rate</div>
       <div class="value">{fmtPct(player.winRate)}</div>
-      <div class="sub">{player.wins} of {player.matches} matches</div>
+      <div class="sub">{player.wins} of {plural(player.matches, "match", "matches")}</div>
     </div>
     <div class="stat">
       <div class="label">Tie rate</div>
       <div class="value">{fmtPct(player.tieRate)}</div>
-      <div class="sub">{player.draws} draws</div>
+      <div class="sub">{plural(player.draws, "draw")}</div>
     </div>
     <div class="stat">
       <div class="label">Record</div>
@@ -397,8 +397,10 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     cursor: pointer;
     transition: background-color 0.15s, transform 160ms var(--ease);
   }
-  .show-all:hover {
-    background: var(--surface-2);
+  @media (hover: hover) {
+    .show-all:hover {
+      background: var(--surface-2);
+    }
   }
 </style>
 

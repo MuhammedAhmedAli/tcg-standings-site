@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <style>
+    .line { stroke: #161514; }
+    .base { fill: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      .line { stroke: #f2f2f2; }
+      .base { fill: #1c1c1c; }
+    }
+  </style>
+  <circle class="base line" cx="12" cy="12" r="10.5" stroke-width="2"/>
+  <path d="M1.5 12a10.5 10.5 0 0 1 21 0z" fill="#a08672"/>
+  <circle class="line" cx="12" cy="12" r="10.5" fill="none" stroke-width="2"/>
+  <path class="line" d="M1.5 12h7M15.5 12h7" stroke-width="2"/>
+  <circle class="base line" cx="12" cy="12" r="3.2" stroke-width="2"/>
+</svg>

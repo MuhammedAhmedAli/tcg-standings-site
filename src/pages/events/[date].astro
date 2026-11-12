@@ -56,7 +56,7 @@ const notes = [firstTimers && plural(firstTimers, "first-timer", "first-timers")
             <tr>
               <td class:list={["num pos", { "is-podium": r.rank <= 3 }]}>{ordinal(r.rank)}</td>
               <td class="player">
-                <a href={href(`/players/${r.slug}/`)}>{r.name}</a>
+                <a href={href(`/players/${r.slug}/`)} title={r.name}>{r.name}</a>
                 {r.tag && <span class:list={["tag", { "tag-new": r.tag.kind === "debut" }]}>{tagText(r.tag)}</span>}
               </td>
               <td class="num">
@@ -114,8 +114,10 @@ const notes = [firstTimers && plural(firstTimers, "first-timer", "first-timers")
     letter-spacing: -0.02em;
     background: none;
   }
-  .pager a:hover {
-    color: var(--accent-soft);
+  @media (hover: hover) {
+    .pager a:hover {
+      color: var(--accent-soft);
+    }
   }
   .pager .muted {
     font: 400 13px/1.4 var(--font-text);

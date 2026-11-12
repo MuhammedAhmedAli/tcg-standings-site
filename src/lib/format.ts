@@ -10,6 +10,9 @@ export const fmtPct = (x: number) => `${(x * 100).toFixed(1)}%`;
 export const fmtTop = (x: number) => `Top ${Math.max(1, Math.round(x * 100))}%`;
 export const fmtRecord = (w: number, l: number, d: number) => `${w}-${l}-${d}`;
 
+/** "1 event", "3 events". Pass the plural when it isn't the singular plus "s". */
+export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
 export function ordinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;

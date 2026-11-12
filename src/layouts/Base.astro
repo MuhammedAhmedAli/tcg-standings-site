@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import { getSiteData } from "../lib/site-data";
-import { fmtDate, href } from "../lib/format";
+import { fmtDate, href, plural } from "../lib/format";
 import PlayerSearch from "../components/PlayerSearch.astro";
 import FormatsMenu from "../components/FormatsMenu.astro";
 import ThemeToggle from "../components/ThemeToggle.astro";
@@ -50,6 +50,9 @@ const last = events[events.length - 1];
     </script>
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <link rel="icon" href={href("/favicon.svg")} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={href("/apple-touch-icon.png")} />
+    <link rel="manifest" href={href("/manifest.webmanifest")} />
     <link rel="preload" href={displayUrl} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={textUrl} as="font" type="font/woff2" crossorigin />
     <style set:html={fontFaces}></style>
@@ -76,7 +79,7 @@ const last = events[events.length - 1];
     <footer class="site">
       <div class="wrap">
         <span>Jesters Locals · weekly results</span>
-        {last && <span class="mono">{events.length} events · last {fmtDate(last.date)}</span>}
+        {last && <span class="mono">{plural(events.length, "event")} · last {fmtDate(last.date)}</span>}
       </div>
     </footer>
     <script>

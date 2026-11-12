@@ -70,8 +70,10 @@ const players = standings.map((p) => [p.name, href(`/players/${p.slug}/`)]);
   input::placeholder {
     color: var(--faint);
   }
-  input:hover {
-    border-color: var(--faint);
+  @media (hover: hover) {
+    input:hover {
+      border-color: var(--faint);
+    }
   }
   input:focus {
     outline: none;

@@ -57,7 +57,7 @@ for (const e of [...events].reverse()) {
                   </td>
                   <td class="num">{e.entrants}</td>
                   <td class="player">
-                    <a href={href(`/players/${slugOf.get(e.winner)}/`)}>{e.winner}</a>
+                    <a href={href(`/players/${slugOf.get(e.winner)}/`)} title={e.winner}>{e.winner}</a>
                   </td>
                 </tr>
               ))}

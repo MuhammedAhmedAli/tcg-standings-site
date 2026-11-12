@@ -4,7 +4,7 @@ import StandingsTable from "../../components/StandingsTable.astro";
 import FormatPicker from "../../components/FormatPicker.astro";
 import ScopeStats from "../../components/ScopeStats.astro";
 import { getSiteData, type FormatData } from "../../lib/site-data";
-import { fmtDate, href } from "../../lib/format";
+import { fmtDate, href, plural } from "../../lib/format";
 
 export async function getStaticPaths() {
   const { formats } = await getSiteData();
@@ -18,7 +18,7 @@ const last = format.events[format.events.length - 1]!;
 const current = format.until === null;
 ---
 
-<Base title={`${format.name} standings · Jesters Locals`} description={`Jesters Locals standings for ${format.name}: ${format.standings.length} players over ${format.events.length} weeks.`} format={format.slug}>
+<Base title={`${format.name} standings · Jesters Locals`} description={`Jesters Locals standings for ${format.name}: ${plural(format.standings.length, "player")} over ${plural(format.events.length, "week")}.`} format={format.slug}>
   <p class="eyebrow">Format · {current ? "current" : `${fmtDate(first.date)} to ${fmtDate(last.date)}`}</p>
   <h1 data-enter>{format.name} standings</h1>
   <p class="lede">

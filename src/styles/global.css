@@ -98,6 +98,8 @@
 }
 html {
   -webkit-text-size-adjust: 100%;
+  /* No grey flash on tap in iOS Safari; buttons give their own :active feedback. */
+  -webkit-tap-highlight-color: transparent;
   background: var(--bg);
 }
 body {
@@ -116,8 +118,10 @@ a {
   background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
   transition: background-size 0.25s var(--ease), color 0.15s;
 }
-a:hover {
-  background-size: 100% 1px;
+@media (hover: hover) {
+  a:hover {
+    background-size: 100% 1px;
+  }
 }
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -216,8 +220,10 @@ header.site nav {
     border-radius: 0;
     border-bottom: 2px solid transparent;
   }
-  header.site .wrap nav > a:hover {
-    background: none;
+  @media (hover: hover) {
+    header.site .wrap nav > a:hover {
+      background: none;
+    }
   }
   header.site .wrap nav > a[aria-current="page"] {
     border-bottom-color: var(--accent);
@@ -234,9 +240,11 @@ header.site nav > a {
   background: none;
   transition: color 0.15s, background-color 0.15s;
 }
-header.site nav > a:hover {
-  color: var(--ink);
-  background: var(--surface);
+@media (hover: hover) {
+  header.site nav > a:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
 }
 header.site nav > a[aria-current="page"] {
   color: var(--ink);
@@ -335,8 +343,10 @@ thead th.num {
 tbody tr {
   transition: background-color 0.12s;
 }
-tbody tr:hover {
-  background: var(--surface-2);
+@media (hover: hover) {
+  tbody tr:hover {
+    background: var(--surface-2);
+  }
 }
 td.date {
   white-space: nowrap;
@@ -348,8 +358,10 @@ td.sticky {
   background: var(--surface);
   z-index: 1;
 }
-tbody tr:hover td.sticky {
-  background: var(--surface-2);
+@media (hover: hover) {
+  tbody tr:hover td.sticky {
+    background: var(--surface-2);
+  }
 }
 td.player {
   white-space: nowrap;
@@ -376,8 +388,10 @@ th button {
   min-height: 24px;
   transition: color 0.15s;
 }
-th button:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  th button:hover {
+    color: var(--ink);
+  }
 }
 th button:focus-visible {
   outline: 2px solid var(--accent);
@@ -479,9 +493,11 @@ th[aria-sort="descending"] button::after {
 .field-min select {
   min-width: 150px;
 }
-.field input:hover,
-.field select:hover {
-  border-color: var(--faint);
+@media (hover: hover) {
+  .field input:hover,
+  .field select:hover {
+    border-color: var(--faint);
+  }
 }
 .field input:focus,
 .field select:focus {
@@ -666,8 +682,10 @@ thead th.sticky {
   left: 52px;
   box-shadow: inset -1px 0 0 var(--line);
 }
-#standings tbody tr:hover td.pos {
-  background: var(--surface-2);
+@media (hover: hover) {
+  #standings tbody tr:hover td.pos {
+    background: var(--surface-2);
+  }
 }
 
 /* Zones, like a league table: the podium rows are tinted with a bronze rail, places 4–8 get a
@@ -680,9 +698,11 @@ thead th.sticky {
 #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]) td:is(.pos, .sticky) {
   background: var(--zone-podium-bg);
 }
-#standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]):hover,
-#standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]):hover td:is(.pos, .sticky) {
-  background: var(--surface-2);
+@media (hover: hover) {
+  #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]):hover,
+  #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]):hover td:is(.pos, .sticky) {
+    background: var(--surface-2);
+  }
 }
 #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]) td.pos {
   box-shadow: inset 3px 0 0 var(--zone-rail-podium);
@@ -737,6 +757,15 @@ thead th.sticky {
   #standings-pinned th.sticky,
   #standings td.sticky {
     left: 44px;
+  }
+  /* Keep a long name from widening the Player column and pushing the stats off a phone screen.
+     The full name is in the link's title and on the player page. */
+  td.player a[href*="/players/"] {
+    display: inline-block;
+    max-width: 5.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
   }
 }
 

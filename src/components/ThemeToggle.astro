@@ -37,9 +37,11 @@
       background-color 0.15s,
       transform 160ms var(--ease);
   }
-  .theme-toggle:hover {
-    color: var(--ink);
-    background: var(--surface);
+  @media (hover: hover) {
+    .theme-toggle:hover {
+      color: var(--ink);
+      background: var(--surface);
+    }
   }
   .theme-toggle:active {
     transform: scale(0.97);

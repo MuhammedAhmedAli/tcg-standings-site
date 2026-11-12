@@ -270,8 +270,10 @@ const lead = leader && second ? leader.points - second.points : null;
     color: var(--muted);
     font-size: 14px;
   }
-  .table-head a:hover {
-    color: var(--ink);
+  @media (hover: hover) {
+    .table-head a:hover {
+      color: var(--ink);
+    }
   }
   .latest-head {
     display: flex;
@@ -372,8 +374,10 @@ const lead = leader && second ? leader.points - second.points : null;
     font-size: 14px;
     background: none;
   }
-  .latest-all:hover {
-    color: var(--ink);
+  @media (hover: hover) {
+    .latest-all:hover {
+      color: var(--ink);
+    }
   }
   @media (max-width: 760px) {
     .latest {
