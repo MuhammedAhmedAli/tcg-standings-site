@@ -1,6 +1,9 @@
 ---
 import Base from "../../layouts/Base.astro";
 import PlacementChart from "../../components/PlacementChart.astro";
+import SeasonGrid from "../../components/SeasonGrid.astro";
+import FinishBreakdown from "../../components/FinishBreakdown.astro";
+import Milestones from "../../components/Milestones.astro";
 import { getSiteData } from "../../lib/site-data";
 import { fmtDate, fmtPct, fmtShortDate, fmtTop, href, ordinal } from "../../lib/format";
 import type { Streak } from "../../data";
@@ -12,7 +15,7 @@ export async function getStaticPaths() {
 }
 
 const { player } = Astro.props as { player: PlayerStats };
-const { position, standings, formats, formatOf, streaks } = await getSiteData();
+const { position, standings, formats, formatOf, streaks, events, rounds } = await getSiteData();
 // This player's line in each format they played, newest format first.
 const byFormat = [...formats]
   .reverse()
@@ -39,7 +42,10 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
   <a class="back" id="back" href={href("/")} data-formats={JSON.stringify(formats.map((f) => [f.slug, f.name]))}>← All standings</a>
   <p class="eyebrow">{ordinal(pos)} of {standings.length} overall</p>
   <h1 data-enter>{player.name}</h1>
-  <p class="lede">{player.events} events, from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}.</p>
+  <p class="lede">
+    {player.events} events, from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}.
+    <a class="compare" href={href(`/compare/?a=${player.slug}`)}>Compare with another player →</a>
+  </p>
 
   <div class="stats">
     <div class="stat">
@@ -68,6 +74,12 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
       <div class="sub">of {player.events} played</div>
     </div>
   </div>
+
+  <h2>Season</h2>
+  <SeasonGrid history={player.history} events={events} formats={formats} formatOf={formatOf} />
+
+  <h2>Where they finish</h2>
+  <FinishBreakdown history={player.history} />
 
   <div class="latest-head">
     <h2 id="latest-h">Latest finishes</h2>
@@ -151,6 +163,9 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     </div>
   </div>
 
+  <h2>Milestones</h2>
+  <Milestones history={player.history} rounds={rounds} />
+
   {
     byFormat.length > 0 && (
       <>
@@ -203,6 +218,11 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
 </Base>
 
 <style>
+  .compare {
+    margin-left: 6px;
+    color: var(--accent-soft);
+    white-space: nowrap;
+  }
   .streaks {
     grid-template-columns: repeat(4, 1fr);
     margin-top: 20px;
