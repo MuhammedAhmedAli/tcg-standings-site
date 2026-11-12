@@ -48,6 +48,22 @@ const last = events[events.length - 1];
         if (t === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f4f3f1");
       })();
     </script>
+    <!-- Page transitions, incoming side (outgoing side: scripts/page-transitions.ts). Has to run
+         before the first paint, so it is inline. A player page names its heading so a clicked
+         name can grow into it; the heading's own entrance is skipped while that plays. -->
+    <script is:inline>
+      addEventListener("pagereveal", function (e) {
+        if (!e.viewTransition) return;
+        var root = document.documentElement;
+        root.classList.add("vt");
+        var h = /\/players\/[^/]+\/?$/.test(location.pathname) && document.querySelector("main h1");
+        if (h) h.style.viewTransitionName = "player-name";
+        e.viewTransition.finished.finally(function () {
+          root.classList.remove("vt");
+          if (h) h.style.viewTransitionName = "";
+        });
+      });
+    </script>
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <link rel="icon" href={href("/favicon.svg")} type="image/svg+xml" />
@@ -85,6 +101,7 @@ const last = events[events.length - 1];
     <script>
       import "../scripts/pinned-head";
       import "../scripts/nav-progress";
+      import "../scripts/page-transitions";
     </script>
   </body>
 </html>
