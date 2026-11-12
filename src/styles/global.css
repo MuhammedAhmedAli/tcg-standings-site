@@ -19,9 +19,9 @@
   --accent-ink: #111111;
   --grid: #262626;
 
-  --font-display: "Space Grotesk", system-ui, sans-serif;
-  --font-text: "Inter", system-ui, sans-serif;
-  --font-data: "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Space Grotesk Fallback", system-ui, sans-serif;
+  --font-text: "Inter", "Inter Fallback", system-ui, sans-serif;
+  --font-data: "Inter", "Inter Fallback", system-ui, sans-serif;
 
   --radius: 10px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -674,5 +674,65 @@ thead th.sticky {
   #standings-pinned th.sticky,
   #standings td.sticky {
     left: 44px;
+  }
+}
+
+/*
+ * Page-load bar (scripts/nav-progress.ts). Hidden unless a navigation takes longer than 150ms.
+ * It eases most of the way across and waits there; the next page replaces it when it paints.
+ */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: 2px;
+  background: var(--accent-soft);
+  box-shadow: 0 0 8px rgb(196 171 151 / 0.5);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  pointer-events: none;
+}
+.nav-progress.is-on {
+  opacity: 1;
+  animation: nav-progress 8s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+}
+@keyframes nav-progress {
+  from {
+    transform: scaleX(0.08);
+  }
+  to {
+    transform: scaleX(0.9);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No sweep: a steady line says "loading" just as well. */
+  .nav-progress.is-on {
+    animation: none;
+    transform: scaleX(1);
+    opacity: 0.7;
+  }
+}
+
+/*
+ * Placeholder for text that a script fills in (compare page). One line of text tall, so the
+ * real value lands in the same spot; a slow sheen runs across it while it waits.
+ */
+.skel {
+  display: inline-block;
+  max-width: 100%;
+  height: 0.8em;
+  vertical-align: -0.05em;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--surface-2) 0%, #2f2b28 50%, var(--surface-2) 100%) 0 0 / 200% 100%;
+  animation: skel 1.4s linear infinite;
+}
+p > .skel {
+  display: block;
+  margin: 0.45em 0;
+}
+@keyframes skel {
+  to {
+    background-position: -200% 0;
   }
 }

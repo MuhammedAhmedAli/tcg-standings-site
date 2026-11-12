@@ -40,6 +40,7 @@ const latest = formats[formats.length - 1];
 <script>
   const select = document.querySelector<HTMLSelectElement>("#fpick-select");
   select?.addEventListener("change", () => {
+    document.dispatchEvent(new Event("nav:start"));
     location.href = select.value;
   });
 </script>

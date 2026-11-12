@@ -22,6 +22,8 @@ const players = standings.map((p, i) => ({
   h: p.history.map((h) => [h.date, h.rank]),
 }));
 const byName = [...players].sort((a, b) => a.n.localeCompare(b.n));
+// Row labels for the placeholder card shown until the script fills in the real one.
+const skeletonRows = ["Position", "Points", "Locals played", "Win rate", "Tie rate", "Average finish", "Locals won", "Top 8s"];
 ---
 
 <Base title="Compare players · Jesters Locals" description="Two Jesters Locals players side by side." section="standings">
@@ -48,13 +50,27 @@ const byName = [...players].sort((a, b) => a.n.localeCompare(b.n));
 
   <div id="cmp" class="cmp" aria-live="polite">
     <div class="cmp-names">
-      <a id="name-a" class="cmp-name" href="#"></a>
-      <a id="name-b" class="cmp-name r" href="#"></a>
+      <a id="name-a" class="cmp-name" href="#"><span class="skel" style="width:6ch"></span></a>
+      <a id="name-b" class="cmp-name r" href="#"><span class="skel" style="width:6ch"></span></a>
     </div>
-    <div class="cmp-card" id="rows"></div>
+    {/* Same shape as the real rows, so nothing moves when the script swaps them in. */}
+    <div class="cmp-card" id="rows" aria-busy="true">
+      {
+        skeletonRows.map((k) => (
+          <div class="row">
+            <span class="v"><span class="skel" style="width:3ch" /></span>
+            <div class="mid">
+              <span class="k">{k}</span>
+              <div class="bar" aria-hidden="true"><i style="flex:1" /><i style="flex:1" /></div>
+            </div>
+            <span class="v r"><span class="skel" style="width:3ch" /></span>
+          </div>
+        ))
+      }
+    </div>
 
     <h2>On the same night</h2>
-    <p class="muted" id="h2h-text"></p>
+    <p class="muted" id="h2h-text"><span class="skel" style="width:100%"></span><span class="skel" style="width:60%"></span></p>
     <div class="split" id="h2h-bar" aria-hidden="true"><i class="on"></i><i></i></div>
   </div>
   <p id="same" class="muted" hidden>Pick two different players.</p>
@@ -218,7 +234,9 @@ const byName = [...players].sort((a, b) => a.n.localeCompare(b.n));
       el.href = href(`/players/${p.s}/`);
     }
 
-    document.getElementById("rows")!.innerHTML = rows
+    const card = document.getElementById("rows")!;
+    card.removeAttribute("aria-busy");
+    card.innerHTML = rows
       .map((r) => {
         const va = r.get(a), vb = r.get(b);
         const aw = r.better !== 0 && (r.better > 0 ? va > vb : va < vb);
