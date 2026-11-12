@@ -51,8 +51,10 @@ function pin(frame: HTMLElement) {
   const update = () => {
     const box = table.getBoundingClientRect();
     const headHeight = head.offsetHeight;
+    // A page with its own sticky bar (player pages) sets --sticky-top; the copy sits under it.
+    const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sticky-top")) || 0;
     // Show once the real header is gone, and hide again before the last rows leave the screen.
-    const show = box.top < 0 && box.bottom > headHeight * 2 && frame.offsetParent !== null;
+    const show = box.top < top && box.bottom > top + headHeight * 2 && frame.offsetParent !== null;
     if (show && bar.hidden) {
       bar.hidden = false;
       layout();
