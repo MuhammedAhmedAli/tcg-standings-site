@@ -42,7 +42,10 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
   <a class="back" id="back" href={href("/")} data-formats={JSON.stringify(formats.map((f) => [f.slug, f.name]))}>← All standings</a>
   <p class="eyebrow">{ordinal(pos)} of {standings.length} overall</p>
   <h1 data-enter>{player.name}</h1>
-  <p class="lede">{player.events} events, from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}.</p>
+  <p class="lede">
+    {player.events} events, from {fmtDate(player.firstEvent)} to {fmtDate(player.lastEvent)}.
+    <a class="compare" href={href(`/compare/?a=${player.slug}`)}>Compare with another player →</a>
+  </p>
 
   <div class="stats">
     <div class="stat">
@@ -215,6 +218,11 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
 </Base>
 
 <style>
+  .compare {
+    margin-left: 6px;
+    color: var(--accent-soft);
+    white-space: nowrap;
+  }
   .streaks {
     grid-template-columns: repeat(4, 1fr);
     margin-top: 20px;

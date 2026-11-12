@@ -1,0 +1,270 @@
+---
+import Base from "../layouts/Base.astro";
+import { getSiteData } from "../lib/site-data";
+import { href } from "../lib/format";
+
+const { standings } = await getSiteData();
+// Everything the page needs per player, small enough to ship as one JSON blob.
+const players = standings.map((p, i) => ({
+  n: p.name,
+  s: p.slug,
+  pos: i + 1,
+  pts: p.points,
+  ev: p.events,
+  w: p.wins,
+  l: p.losses,
+  d: p.draws,
+  wr: p.winRate,
+  tr: p.tieRate,
+  avg: p.averagePercentile,
+  won: p.firsts,
+  t8: p.history.filter((h) => h.rank <= 8).length,
+  h: p.history.map((h) => [h.date, h.rank]),
+}));
+const byName = [...players].sort((a, b) => a.n.localeCompare(b.n));
+---
+
+<Base title="Compare players · Jesters Locals" description="Two Jesters Locals players side by side." section="standings">
+  <a class="back" href={href("/")}>← All standings</a>
+  <p class="eyebrow">All time · {standings.length} players</p>
+  <h1 data-enter>Compare players</h1>
+  <p class="lede">Season stats side by side, and how they finished on the nights they both played.</p>
+
+  <div class="pickers">
+    <label class="field">
+      <span>Player</span>
+      <select id="pick-a">
+        {byName.map((p) => <option value={p.s}>{p.n}</option>)}
+      </select>
+    </label>
+    <span class="vs" aria-hidden="true">vs</span>
+    <label class="field">
+      <span>Compare with</span>
+      <select id="pick-b">
+        {byName.map((p) => <option value={p.s}>{p.n}</option>)}
+      </select>
+    </label>
+  </div>
+
+  <div id="cmp" class="cmp" aria-live="polite">
+    <div class="cmp-names">
+      <a id="name-a" class="cmp-name" href="#"></a>
+      <a id="name-b" class="cmp-name r" href="#"></a>
+    </div>
+    <div class="cmp-card" id="rows"></div>
+
+    <h2>On the same night</h2>
+    <p class="muted" id="h2h-text"></p>
+    <div class="split" id="h2h-bar" aria-hidden="true"><i class="on"></i><i></i></div>
+  </div>
+  <p id="same" class="muted" hidden>Pick two different players.</p>
+
+  <script id="players" type="application/json" set:html={JSON.stringify(players)} />
+</Base>
+
+<style>
+  .pickers {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .vs {
+    padding-bottom: 12px;
+    font-size: 13px;
+    color: var(--faint);
+  }
+  .cmp-names {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 36px 0 16px;
+  }
+  .cmp-name {
+    justify-self: start;
+    font: 400 40px/1.05 var(--font-display);
+    letter-spacing: -0.035em;
+  }
+  .cmp-name.r {
+    justify-self: end;
+    text-align: right;
+  }
+  .cmp-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .cmp-card :global(.row) {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--line);
+  }
+  .cmp-card :global(.row:first-child) {
+    border-top: 0;
+  }
+  .cmp-card :global(.v) {
+    font-size: 16px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .cmp-card :global(.v.r) {
+    text-align: right;
+  }
+  .cmp-card :global(.v.best) {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .cmp-card :global(.mid) {
+    display: grid;
+    gap: 7px;
+  }
+  .cmp-card :global(.k) {
+    font-size: 13px;
+    color: var(--faint);
+    text-align: center;
+  }
+  .cmp-card :global(.bar),
+  .split {
+    display: flex;
+    gap: 3px;
+    height: 4px;
+  }
+  .cmp-card :global(.bar i),
+  .split i {
+    display: block;
+    border-radius: 2px;
+    background: var(--line-strong);
+  }
+  .cmp-card :global(.bar i.on),
+  .split i.on {
+    background: var(--accent);
+  }
+  .split {
+    height: 6px;
+    margin-top: 14px;
+  }
+  #h2h-text {
+    margin: 0;
+  }
+  #h2h-text :global(strong) {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  @media (max-width: 600px) {
+    .pickers {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .vs {
+      display: none;
+    }
+    .cmp-name {
+      font-size: 26px;
+    }
+    .cmp-card :global(.row) {
+      grid-template-columns: 72px 1fr 72px;
+      gap: 10px;
+      padding: 12px 14px;
+    }
+    .cmp-card :global(.v) {
+      font-size: 14px;
+    }
+  }
+</style>
+
+<script>
+  import { fmtPct, fmtTop, href, ordinal } from "../lib/format";
+
+  type P = {
+    n: string; s: string; pos: number; pts: number; ev: number; w: number; l: number; d: number;
+    wr: number; tr: number; avg: number; won: number; t8: number; h: [string, number][];
+  };
+  const players: P[] = JSON.parse(document.getElementById("players")!.textContent!);
+  const bySlug = new Map(players.map((p) => [p.s, p]));
+  const pickA = document.getElementById("pick-a") as HTMLSelectElement;
+  const pickB = document.getElementById("pick-b") as HTMLSelectElement;
+
+  // better: 1 = higher wins, -1 = lower wins, 0 = neither (tie rate is a style, not a score).
+  const rows: { k: string; get: (p: P) => number; fmt: (v: number) => string; better: 1 | -1 | 0 }[] = [
+    { k: "Position", get: (p) => p.pos, fmt: ordinal, better: -1 },
+    { k: "Points", get: (p) => p.pts, fmt: String, better: 1 },
+    { k: "Locals played", get: (p) => p.ev, fmt: String, better: 1 },
+    { k: "Win rate", get: (p) => p.wr, fmt: fmtPct, better: 1 },
+    { k: "Tie rate", get: (p) => p.tr, fmt: fmtPct, better: 0 },
+    { k: "Average finish", get: (p) => p.avg, fmt: fmtTop, better: -1 },
+    { k: "Locals won", get: (p) => p.won, fmt: String, better: 1 },
+    { k: "Top 8s", get: (p) => p.t8, fmt: String, better: 1 },
+  ];
+
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+
+  function render() {
+    const a = bySlug.get(pickA.value)!;
+    const b = bySlug.get(pickB.value)!;
+    const params = new URLSearchParams({ a: a.s, b: b.s });
+    history.replaceState(null, "", `?${params}`);
+    const same = a.s === b.s;
+    document.getElementById("cmp")!.hidden = same;
+    document.getElementById("same")!.hidden = !same;
+    if (same) return;
+
+    for (const [id, p] of [["name-a", a], ["name-b", b]] as const) {
+      const el = document.getElementById(id) as HTMLAnchorElement;
+      el.textContent = p.n;
+      el.href = href(`/players/${p.s}/`);
+    }
+
+    document.getElementById("rows")!.innerHTML = rows
+      .map((r) => {
+        const va = r.get(a), vb = r.get(b);
+        const aw = r.better !== 0 && (r.better > 0 ? va > vb : va < vb);
+        const bw = r.better !== 0 && (r.better > 0 ? vb > va : vb < va);
+        // Bar shares: for "lower is better" rows compare the inverses so the better side gets more.
+        const sa = r.better < 0 ? 1 / Math.max(va, 1e-9) : va;
+        const sb = r.better < 0 ? 1 / Math.max(vb, 1e-9) : vb;
+        const fa = sa + sb > 0 ? (sa / (sa + sb)) * 100 : 50;
+        return `<div class="row">
+          <span class="v${aw ? " best" : ""}">${esc(r.fmt(va))}</span>
+          <div class="mid"><span class="k">${r.k}</span>
+            <div class="bar" aria-hidden="true"><i class="${aw ? "on" : ""}" style="flex:${fa}"></i><i class="${bw ? "on" : ""}" style="flex:${100 - fa}"></i></div></div>
+          <span class="v r${bw ? " best" : ""}">${esc(r.fmt(vb))}</span>
+        </div>`;
+      })
+      .join("");
+
+    // Nights both played: who finished higher.
+    const rankB = new Map(b.h);
+    let ab = 0, ba = 0;
+    for (const [date, ra] of a.h) {
+      const rb = rankB.get(date);
+      if (rb === undefined) continue;
+      if (ra < rb) ab++;
+      else ba++;
+    }
+    const shared = ab + ba;
+    const text = document.getElementById("h2h-text")!;
+    const bar = document.getElementById("h2h-bar")!;
+    bar.style.display = shared === 0 ? "none" : "";
+    if (shared === 0) {
+      text.textContent = "They haven't played the same locals yet.";
+      return;
+    }
+    const times = (n: number) => `<strong>${n}</strong> ${n === 1 ? "time" : "times"}`;
+    text.innerHTML = `Both played <strong>${shared}</strong> of the same locals. ${esc(a.n)} finished higher ${times(ab)}, ${esc(b.n)} ${times(ba)}. There's no per-match data, so this compares final places, not games against each other.`;
+    const [ia, ib] = Array.from(bar.children) as HTMLElement[];
+    ia!.style.flex = String(ab);
+    ib!.style.flex = String(ba);
+  }
+
+  const q = new URLSearchParams(location.search);
+  pickA.value = bySlug.has(q.get("a") ?? "") ? q.get("a")! : players[0]!.s;
+  const fallbackB = players.find((p) => p.s !== pickA.value)!.s;
+  pickB.value = bySlug.has(q.get("b") ?? "") && q.get("b") !== pickA.value ? q.get("b")! : fallbackB;
+  pickA.addEventListener("change", render);
+  pickB.addEventListener("change", render);
+  render();
+</script>
