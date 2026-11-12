@@ -846,3 +846,33 @@ p > .skel {
     background-position: -200% 0;
   }
 }
+
+/*
+ * Page transitions (scripts/page-transitions.ts). A quick crossfade between pages, and a clicked
+ * player name grows into the player page heading. Off for reduced motion, and ignored by browsers without cross-document view
+ * transitions, which just load the page as before.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+  animation-timing-function: ease-out;
+}
+::view-transition-group(player-name) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+::view-transition-old(player-name),
+::view-transition-new(player-name) {
+  width: auto;
+  height: 100%;
+  animation-duration: 200ms;
+}
+/* The heading's own settle-in would play on top of the move. */
+.vt [data-enter] {
+  animation: none;
+}
