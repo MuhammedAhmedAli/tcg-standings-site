@@ -140,9 +140,11 @@ const kind = (h: EventResult | undefined) => (!h ? "miss" : h.rank === 1 ? "win"
     border-radius: 3px;
     background: none;
   }
-  a.c:hover {
-    outline: 1px solid var(--ink);
-    outline-offset: 1px;
+  @media (hover: hover) {
+    a.c:hover {
+      outline: 1px solid var(--ink);
+      outline-offset: 1px;
+    }
   }
   .c-win {
     background: var(--accent-soft);

@@ -73,8 +73,10 @@ const latest = formats[formats.length - 1];
   .fmenu summary[aria-current="page"] {
     color: var(--ink);
   }
-  .fmenu summary:hover {
-    background: var(--surface);
+  @media (hover: hover) {
+    .fmenu summary:hover {
+      background: var(--surface);
+    }
   }
   .fmenu svg {
     transition: transform 0.15s var(--ease);
@@ -135,9 +137,11 @@ const latest = formats[formats.length - 1];
     color: var(--muted);
     background: none;
   }
-  .fmenu-panel a:hover {
-    color: var(--ink);
-    background: var(--surface-2);
+  @media (hover: hover) {
+    .fmenu-panel a:hover {
+      color: var(--ink);
+      background: var(--surface-2);
+    }
   }
   .fmenu-panel a[aria-current="page"] {
     color: var(--ink);
@@ -165,8 +169,10 @@ const latest = formats[formats.length - 1];
       border-radius: 0;
       border-bottom: 2px solid transparent;
     }
-    .fmenu summary:hover {
-      background: none;
+    @media (hover: hover) {
+      .fmenu summary:hover {
+        background: none;
+      }
     }
     .fmenu summary[aria-current="page"] {
       border-bottom-color: var(--accent);
