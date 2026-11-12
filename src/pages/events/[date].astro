@@ -3,6 +3,7 @@ import Base from "../../layouts/Base.astro";
 import { getSiteData } from "../../lib/site-data";
 import { fmtDate, href, ordinal } from "../../lib/format";
 import type { EventSummary } from "../../data";
+import { eventTag, type EventTag } from "../../data/milestones";
 
 export async function getStaticPaths() {
   const { events } = await getSiteData();
@@ -18,15 +19,26 @@ const format = formatOf.get(event.date);
 
 // Rebuild this event's table from each player's history.
 const results = standings
-  .flatMap((p) => p.history.filter((h) => h.date === event.date).map((h) => ({ ...h, name: p.name, slug: p.slug })))
+  .flatMap((p) =>
+    p.history.filter((h) => h.date === event.date).map((h) => ({ ...h, name: p.name, slug: p.slug, tag: eventTag(p.history, event.date) })),
+  )
   .sort((a, b) => a.rank - b.rank);
+
+const tagText = (t: EventTag) =>
+  t.kind === "first-win" ? (t.debut ? "Won their first locals" : "First locals win") : t.kind === "debut" ? "First locals" : `Best finish (was ${ordinal(t.was)})`;
+const firstTimers = results.filter((r) => r.tag?.kind === "debut" || (r.tag?.kind === "first-win" && r.tag.debut)).length;
+const bests = results.filter((r) => r.tag?.kind === "best").length;
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+const notes = [firstTimers && plural(firstTimers, "first-timer", "first-timers"), bests && plural(bests, "personal best", "personal bests")].filter(Boolean);
 ---
 
 <Base title={`${fmtDate(event.date)} · Jesters Locals`} section="events">
   <a class="back" href={href("/events/")}>← Every locals</a>
   <p class="eyebrow">{format ? `${format.name} · ` : ""}{event.entrants} players</p>
   <h1 data-enter>{fmtDate(event.date)}</h1>
-  <p class="lede">Won by {event.winner}. Final standings in finishing order.</p>
+  <p class="lede">
+    Won by {event.winner}. Final standings in finishing order.{notes.length > 0 && ` ${notes.join(", ")}.`}
+  </p>
   <div class="table-frame" style="margin-top:40px">
     <table>
       <thead>
@@ -45,6 +57,7 @@ const results = standings
               <td class:list={["num pos", { "is-podium": r.rank <= 3 }]}>{ordinal(r.rank)}</td>
               <td class="player">
                 <a href={href(`/players/${r.slug}/`)}>{r.name}</a>
+                {r.tag && <span class:list={["tag", { "tag-new": r.tag.kind === "debut" }]}>{tagText(r.tag)}</span>}
               </td>
               <td class="num">
                 {r.wins}-{r.losses}-{r.draws}
@@ -75,6 +88,16 @@ const results = standings
 </Base>
 
 <style>
+  /* Milestone notes beside a name: plain text, bronze for wins and bests, grey for debuts. */
+  .tag {
+    margin-left: 10px;
+    font-size: 12.5px;
+    color: var(--accent-soft);
+    white-space: nowrap;
+  }
+  .tag-new {
+    color: var(--faint);
+  }
   .pager {
     display: flex;
     justify-content: space-between;

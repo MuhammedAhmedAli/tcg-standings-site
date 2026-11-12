@@ -1,0 +1,191 @@
+---
+import type { EventResult } from "../data";
+import { nextAttendanceMark, playerMilestones, type Milestone } from "../data/milestones";
+import { fmtDate, href, ordinal } from "../lib/format";
+
+interface Props {
+  history: EventResult[];
+  rounds: Map<string, number>;
+}
+
+const { history, rounds } = Astro.props;
+const items = playerMilestones(history, rounds);
+const next = nextAttendanceMark(history.length);
+
+const title = (m: Milestone) =>
+  ({
+    debut: "First locals",
+    attendance: `${ordinal(m.count ?? 0)} locals`,
+    top8: "First top 8",
+    undefeated: "First undefeated night",
+    win: "First locals win",
+  })[m.kind];
+const detail = (m: Milestone) => {
+  const r = m.result;
+  switch (m.kind) {
+    case "debut":
+      return `Finished ${ordinal(r.rank)} of ${r.entrants}`;
+    case "top8":
+      return `${ordinal(r.rank)} of ${r.entrants}`;
+    case "undefeated":
+      return `${r.wins}-${r.losses}-${r.draws}`;
+    case "win":
+      return `Won a field of ${r.entrants}`;
+    default:
+      return "";
+  }
+};
+---
+
+<div class="ms">
+  <ol class="ms-list">
+    {
+      items.map((m) => (
+        <li class:list={["ms-item", { "is-win": m.kind === "win" }]}>
+          <a class="ms-date" href={href(`/events/${m.date}/`)}>
+            {fmtDate(m.date)}
+          </a>
+          <span class="ms-dot" aria-hidden="true" />
+          <span class="ms-text">
+            <span class="ms-title">{title(m)}</span>
+            {detail(m) && <span class="ms-detail">{detail(m)}</span>}
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+  {
+    next && (
+      <div class="ms-next">
+        <span>
+          Next: <strong>{ordinal(next.target)} locals</strong>
+        </span>
+        <span class="ms-bar" aria-hidden="true">
+          <i style={`width:${(next.played / next.target) * 100}%`} />
+        </span>
+        <span class="ms-count">
+          {next.played} / {next.target}
+        </span>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .ms {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .ms-list {
+    list-style: none;
+    margin: 0;
+    padding: 22px 22px 4px;
+  }
+  .ms-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 112px 14px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding-bottom: 18px;
+  }
+  /* The rail: a hairline from each dot down to the next. */
+  .ms-item:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: calc(112px + 14px + 6px);
+    top: 16px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--line-strong);
+  }
+  .ms-date {
+    justify-self: end;
+    padding-top: 1px;
+    font-size: 13px;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ms-dot {
+    width: 9px;
+    height: 9px;
+    margin: 6px 0 0 2px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 0 0 1.5px var(--line-strong);
+  }
+  .is-win .ms-dot {
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 1.5px var(--accent-soft);
+  }
+  .ms-text {
+    display: grid;
+  }
+  .ms-title {
+    font-weight: 500;
+  }
+  .ms-detail {
+    font-size: 14px;
+    color: var(--faint);
+  }
+  .ms-next {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 22px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .ms-next strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .ms-bar {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line-strong);
+    overflow: hidden;
+  }
+  .ms-bar i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+  }
+  .ms-count {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 600px) {
+    .ms-list {
+      padding: 16px 16px 2px;
+    }
+    .ms-item {
+      grid-template-columns: 14px 1fr;
+      gap: 2px 10px;
+    }
+    .ms-item:not(:last-child)::before {
+      left: 6px;
+    }
+    .ms-date {
+      grid-column: 2;
+      grid-row: 2;
+      justify-self: start;
+    }
+    .ms-dot {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .ms-text {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .ms-next {
+      padding: 12px 16px;
+      gap: 12px;
+    }
+  }
+</style>

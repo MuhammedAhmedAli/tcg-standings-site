@@ -1,0 +1,175 @@
+---
+import type { EventResult, EventSummary } from "../data";
+import type { FormatData } from "../lib/site-data";
+import { fmtDate, href, ordinal } from "../lib/format";
+
+interface Props {
+  history: EventResult[];
+  /** Every locals, oldest first. */
+  events: EventSummary[];
+  formats: FormatData[];
+  formatOf: Map<string, FormatData>;
+}
+
+const { history, events, formats, formatOf } = Astro.props;
+const played = new Map(history.map((h) => [h.date, h]));
+
+// One row per format, oldest first; locals before the first format go in their own row.
+const rows: { name: string; slug?: string; dates: string[] }[] = [];
+const earlier = events.filter((e) => !formatOf.has(e.date)).map((e) => e.date);
+if (earlier.length) rows.push({ name: "Earlier", dates: earlier });
+for (const f of formats) rows.push({ name: f.name, slug: f.slug, dates: f.events.map((e) => e.date).sort() });
+
+const kind = (h: EventResult | undefined) => (!h ? "miss" : h.rank === 1 ? "win" : h.rank <= 8 ? "top" : "play");
+---
+
+<div class="season">
+  <div class="season-head">
+    <span><strong>{history.length}</strong> of {events.length} locals played</span>
+    <span class="season-key" aria-hidden="true">
+      <span><i class="c c-win"></i>Won</span>
+      <span><i class="c c-top"></i>Top 8</span>
+      <span><i class="c c-play"></i>Played</span>
+      <span><i class="c c-miss"></i>Missed</span>
+    </span>
+  </div>
+  <ul class="season-rows">
+    {
+      rows.map((r) => {
+        const n = r.dates.filter((d) => played.has(d)).length;
+        return (
+          <li class="season-row">
+            <span class="season-name">
+              {r.slug ? <a href={href(`/formats/${r.slug}/`)}>{r.name}</a> : r.name}
+              <span class="season-count">
+                {n}/{r.dates.length}
+              </span>
+            </span>
+            <span class="season-cells">
+              {r.dates.map((d) => {
+                const h = played.get(d);
+                return h ? (
+                  <a
+                    class:list={["c", `c-${kind(h)}`]}
+                    href={href(`/events/${d}/`)}
+                    aria-label={`${fmtDate(d)}: ${ordinal(h.rank)} of ${h.entrants}`}
+                    title={`${fmtDate(d)}: ${ordinal(h.rank)} of ${h.entrants}`}
+                  />
+                ) : (
+                  <span class="c c-miss" title={`${fmtDate(d)}: missed`} />
+                );
+              })}
+            </span>
+          </li>
+        );
+      })
+    }
+  </ul>
+</div>
+
+<style>
+  .season {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 18px 22px 20px;
+  }
+  .season-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .season-head strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .season-key {
+    display: flex;
+    gap: 14px;
+    font-size: 12.5px;
+    color: var(--faint);
+  }
+  .season-key span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .season-key .c {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  .season-rows {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .season-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    align-items: center;
+    gap: 16px;
+  }
+  .season-name {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .season-count {
+    color: var(--faint);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .season-cells {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .c {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    background: none;
+  }
+  a.c:hover {
+    outline: 1px solid var(--ink);
+    outline-offset: 1px;
+  }
+  .c-win {
+    background: var(--accent-soft);
+  }
+  .c-top {
+    background: #6b5a4d;
+  }
+  .c-play {
+    background: #474747;
+  }
+  .c-miss {
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  @media (max-width: 600px) {
+    .season {
+      padding: 14px 14px 16px;
+    }
+    .season-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .season-name {
+      justify-content: flex-start;
+    }
+    .c {
+      width: 20px;
+      height: 20px;
+    }
+  }
+</style>

@@ -25,6 +25,8 @@ export interface SiteData {
   formats: FormatData[];
   /** Format slug for each event date (absent if the event predates every format). */
   formatOf: Map<string, FormatData>;
+  /** Rounds played at each locals (the most matches anyone played that night). */
+  rounds: Map<string, number>;
   updated: string;
 }
 
@@ -80,6 +82,7 @@ export function getSiteData(): Promise<SiteData> {
       position: new Map(standings.map((p, i) => [p.name, i + 1])),
       formats,
       formatOf,
+      rounds,
       updated: new Date().toISOString(),
     };
   })();

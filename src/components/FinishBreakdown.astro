@@ -1,0 +1,105 @@
+---
+import type { EventResult } from "../data";
+import { finishBuckets } from "../data/milestones";
+
+interface Props {
+  history: EventResult[];
+}
+
+const { history } = Astro.props;
+const buckets = finishBuckets(history);
+const total = history.length;
+const tones = ["b-1", "b-4", "b-8", "b-rest"];
+---
+
+<div class="finish">
+  <div class="finish-bar" aria-hidden="true">
+    {buckets.map((b, i) => b.count > 0 && <i class={tones[i]} style={`flex:${b.count}`} />)}
+  </div>
+  <dl class="finish-key">
+    {
+      buckets.map((b, i) => (
+        <div>
+          <dt>
+            <i class={tones[i]} aria-hidden="true" />
+            {b.label}
+          </dt>
+          <dd>
+            <span class="n">{b.count}</span>
+            <span class="pct">{total ? Math.round((b.count / total) * 100) : 0}% of nights</span>
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+</div>
+
+<style>
+  .finish {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 20px 22px;
+  }
+  .finish-bar {
+    display: flex;
+    gap: 3px;
+    height: 10px;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .finish-bar i {
+    display: block;
+  }
+  .b-1 {
+    background: var(--accent-soft);
+  }
+  .b-4 {
+    background: var(--accent);
+  }
+  .b-8 {
+    background: #6b5a4d;
+  }
+  .b-rest {
+    background: #3d3d3d;
+  }
+  .finish-key {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 18px 0 0;
+  }
+  dt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  dt i {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  dd {
+    margin: 4px 0 0;
+    display: grid;
+  }
+  .n {
+    font: 500 22px/1.2 var(--font-display);
+    font-variant-numeric: tabular-nums;
+  }
+  .pct {
+    font-size: 12.5px;
+    color: var(--faint);
+  }
+  @media (max-width: 600px) {
+    .finish {
+      padding: 16px;
+    }
+    .finish-key {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+  }
+</style>
