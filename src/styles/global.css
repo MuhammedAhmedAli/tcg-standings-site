@@ -348,6 +348,14 @@ tbody tr {
     background: var(--surface-2);
   }
 }
+/* Rows with a main link open it when tapped anywhere (scripts/nav-progress.ts); press feedback
+   stands in for hover on touch screens. */
+tbody tr:has(a[data-row-link]) {
+  cursor: pointer;
+}
+tbody tr:has(a[data-row-link]):active {
+  background: var(--surface-2);
+}
 td.date {
   white-space: nowrap;
 }
@@ -362,6 +370,9 @@ td.sticky {
   tbody tr:hover td.sticky {
     background: var(--surface-2);
   }
+}
+tbody tr:has(a[data-row-link]):active td.sticky {
+  background: var(--surface-2);
 }
 td.player {
   white-space: nowrap;
@@ -687,6 +698,9 @@ thead th.sticky {
     background: var(--surface-2);
   }
 }
+#standings tbody tr:has(a[data-row-link]):active td.pos {
+  background: var(--surface-2);
+}
 
 /* Zones, like a league table: the podium rows are tinted with a bronze rail, places 4–8 get a
    darker rail, and a dashed line marks the top-8 cut. Only shown in position order. */
@@ -703,6 +717,10 @@ thead th.sticky {
   #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]):hover td:is(.pos, .sticky) {
     background: var(--surface-2);
   }
+}
+#standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]):has(a[data-row-link]):active,
+#standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]):has(a[data-row-link]):active td:is(.pos, .sticky) {
+  background: var(--surface-2);
 }
 #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]) td.pos {
   box-shadow: inset 3px 0 0 var(--zone-rail-podium);

@@ -102,7 +102,7 @@ const cols = [
             >
               <td class:list={["num pos c-pos", { "is-podium": i < 3 }]}>{i + 1}</td>
               <td class="sticky player c-name">
-                <a href={href(`/players/${p.slug}/`)} title={p.name}>{p.name}</a>
+                <a href={href(`/players/${p.slug}/`)} title={p.name} data-row-link>{p.name}</a>
                 {movement && <Move delta={movement.get(p.name)} />}
               </td>
               <td class="num c-points">{p.points}</td>
