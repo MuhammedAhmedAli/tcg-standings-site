@@ -6,12 +6,16 @@ import PlayerSearch from "../components/PlayerSearch.astro";
 import FormatsMenu from "../components/FormatsMenu.astro";
 // Self-hosted, latin-only fonts: served from the same origin as the page, so no Google Fonts round trips.
 // Pairing picked with UI UX Pro Max: Space Grotesk for headings, Inter for text and numbers.
+// The "Fallback" faces are Arial stretched to each font's width and line metrics, so text painted
+// before the web fonts arrive takes the same space and nothing jumps when they swap in.
 import displayUrl from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
 import textUrl from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 
 const fontFaces = `
 @font-face{font-family:"Space Grotesk";font-style:normal;font-display:swap;font-weight:300 700;src:url(${displayUrl}) format("woff2-variations")}
-@font-face{font-family:"Inter";font-style:normal;font-display:swap;font-weight:100 900;src:url(${textUrl}) format("woff2-variations")}`;
+@font-face{font-family:"Inter";font-style:normal;font-display:swap;font-weight:100 900;src:url(${textUrl}) format("woff2-variations")}
+@font-face{font-family:"Space Grotesk Fallback";src:local("Arial"),local("Liberation Sans"),local("Helvetica");size-adjust:108.67%;ascent-override:90.55%;descent-override:26.87%;line-gap-override:0%}
+@font-face{font-family:"Inter Fallback";src:local("Arial"),local("Liberation Sans"),local("Helvetica");size-adjust:106.95%;ascent-override:90.58%;descent-override:22.55%;line-gap-override:0%}`;
 
 interface Props {
   title: string;
@@ -40,6 +44,7 @@ const last = events[events.length - 1];
     <style set:html={fontFaces}></style>
   </head>
   <body>
+    <div class="nav-progress" aria-hidden="true"></div>
     <a class="skip" href="#main">Skip to content</a>
     <header class="site">
       <div class="wrap">
@@ -64,6 +69,7 @@ const last = events[events.length - 1];
     </footer>
     <script>
       import "../scripts/pinned-head";
+      import "../scripts/nav-progress";
     </script>
   </body>
 </html>

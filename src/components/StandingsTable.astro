@@ -53,6 +53,17 @@ const cols = [
   </p>
 
   <div class="table-frame compact" id="standings-frame">
+    {/* Apply a saved "More stats" choice while the page is still parsing, so the columns don't pop in after the first paint. */}
+    <script is:inline>
+      try {
+        if (localStorage.getItem("standings-more") === "1") {
+          document.currentScript.parentElement.classList.remove("compact");
+          const b = document.getElementById("more-stats");
+          b.setAttribute("aria-pressed", "true");
+          b.textContent = "Fewer stats";
+        }
+      } catch {}
+    </script>
     <table id="standings" aria-labelledby={labelledby}>
       <thead>
         <tr>
