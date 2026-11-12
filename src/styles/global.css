@@ -19,12 +19,76 @@
   --accent-ink: #111111;
   --grid: #262626;
 
+  /* Supporting shades, so every colour on the site swaps with the theme. */
+  --bronze-deep: #5a4d43;
+  --bronze-mid: #6b5a4d;
+  --chip: #474747;
+  --chip-2: #3d3d3d;
+  --up: #7fbf8a;
+  --down: #d08070;
+  --zone-podium-bg: #221f1c;
+  --skel-sheen: #2f2b28;
+  --shadow: rgba(0, 0, 0, 0.45);
+  --scroll-shade: rgba(0, 0, 0, 0.85);
+  --glow: rgb(196 171 151 / 0.5);
+  --leader-line: #3a322c;
+  --leader-glow: rgb(196 171 151 / 0.26);
+  --leader-glow-2: rgb(160 134 114 / 0.07);
+  --leader-top: #1f1c1a;
+  --leader-bottom: #161514;
+
   --font-display: "Space Grotesk", "Space Grotesk Fallback", system-ui, sans-serif;
   --font-text: "Inter", "Inter Fallback", system-ui, sans-serif;
   --font-data: "Inter", "Inter Fallback", system-ui, sans-serif;
 
   --radius: 10px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/*
+ * Light theme: the same table in daylight. White panels on a warm off-white page, ink near
+ * black, and the bronze taken a few steps darker so it still reads as text on white.
+ * Set on <html> by the script at the top of Base.astro before the first paint.
+ */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f3f1;
+  --surface: #ffffff;
+  --surface-2: #f2efeb;
+  --line: #e5e2dd;
+  --line-strong: #d2cdc6;
+  --ink: #161514;
+  --muted: #57534e;
+  --faint: #6b665f;
+  --accent: #8f735f;
+  --accent-soft: #765a45;
+  --accent-ink: #ffffff;
+  --grid: #ebe8e3;
+
+  --bronze-deep: #cdb9a8;
+  --bronze-mid: #c4a993;
+  --chip: #d4d0ca;
+  --chip-2: #dcd8d2;
+  --up: #2c7a40;
+  --down: #b0442f;
+  --zone-podium-bg: #f8f3ee;
+  --skel-sheen: #e9e3dc;
+  --shadow: rgb(40 30 20 / 0.12);
+  --scroll-shade: rgb(40 30 20 / 0.14);
+  --glow: rgb(118 90 69 / 0.35);
+  --leader-line: #e3d7cc;
+  --leader-glow: rgb(196 171 151 / 0.34);
+  --leader-glow-2: rgb(196 171 151 / 0.1);
+  --leader-top: #ffffff;
+  --leader-bottom: #faf7f4;
+}
+/* Swap every colour at once when the theme flips, instead of letting each transition run. */
+/* The toggle's own icon is left out so its day/night change still plays. */
+.theme-swap,
+.theme-swap :not(.theme-toggle, .theme-toggle *),
+.theme-swap :not(.theme-toggle, .theme-toggle *)::before,
+.theme-swap :not(.theme-toggle, .theme-toggle *)::after {
+  transition: none !important;
 }
 
 *,
@@ -545,7 +609,7 @@ footer.site .wrap {
 .table-frame {
   background:
     linear-gradient(to left, var(--surface) 40%, transparent) right / 48px 100% no-repeat local,
-    linear-gradient(to left, rgba(0, 0, 0, 0.85), transparent) right / 28px 100% no-repeat scroll,
+    linear-gradient(to left, var(--scroll-shade), transparent) right / 28px 100% no-repeat scroll,
     var(--surface);
 }
 thead th,
@@ -575,7 +639,7 @@ thead th.sticky {
   margin-left: 1px;
   background: var(--surface);
   border-bottom: 1px solid var(--line-strong);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 20px var(--shadow);
 }
 .pinned-head table {
   table-layout: fixed;
@@ -609,9 +673,8 @@ thead th.sticky {
 /* Zones, like a league table: the podium rows are tinted with a bronze rail, places 4–8 get a
    darker rail, and a dashed line marks the top-8 cut. Only shown in position order. */
 #standings {
-  --zone-podium-bg: #221f1c;
   --zone-rail-podium: var(--accent-soft);
-  --zone-rail-top8: #5a4d43;
+  --zone-rail-top8: var(--bronze-deep);
 }
 #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]),
 #standings:has(th[data-key="pos"][aria-sort="ascending"]) tbody tr:is([data-pos="1"], [data-pos="2"], [data-pos="3"]) td:is(.pos, .sticky) {
@@ -653,7 +716,7 @@ thead th.sticky {
   background: var(--accent-soft);
 }
 .zk-top8::before {
-  background: #5a4d43;
+  background: var(--bronze-deep);
 }
 #standings-frame:not(:has(#standings th[data-key="pos"][aria-sort="ascending"])) ~ .zone-key {
   visibility: hidden;
@@ -687,7 +750,7 @@ thead th.sticky {
   z-index: 50;
   height: 2px;
   background: var(--accent-soft);
-  box-shadow: 0 0 8px rgb(196 171 151 / 0.5);
+  box-shadow: 0 0 8px var(--glow);
   transform: scaleX(0);
   transform-origin: left;
   opacity: 0;
@@ -724,7 +787,7 @@ thead th.sticky {
   height: 0.8em;
   vertical-align: -0.05em;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--surface-2) 0%, #2f2b28 50%, var(--surface-2) 100%) 0 0 / 200% 100%;
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--skel-sheen) 50%, var(--surface-2) 100%) 0 0 / 200% 100%;
   animation: skel 1.4s linear infinite;
 }
 p > .skel {

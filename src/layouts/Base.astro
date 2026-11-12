@@ -4,6 +4,7 @@ import { getSiteData } from "../lib/site-data";
 import { fmtDate, href } from "../lib/format";
 import PlayerSearch from "../components/PlayerSearch.astro";
 import FormatsMenu from "../components/FormatsMenu.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
 // Self-hosted, latin-only fonts: served from the same origin as the page, so no Google Fonts round trips.
 // Pairing picked with UI UX Pro Max: Space Grotesk for headings, Inter for text and numbers.
 // The "Fallback" faces are Arial stretched to each font's width and line metrics, so text painted
@@ -37,6 +38,16 @@ const last = events[events.length - 1];
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#111111" />
+    <!-- Theme before first paint: a saved pick, else the system setting. Kept in step by scripts/theme.ts. -->
+    <script is:inline>
+      (function () {
+        var t;
+        try { t = localStorage.getItem("theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (t === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f4f3f1");
+      })();
+    </script>
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <link rel="preload" href={displayUrl} as="font" type="font/woff2" crossorigin />
@@ -56,6 +67,7 @@ const last = events[events.length - 1];
           <FormatsMenu current={format} />
         </nav>
         <PlayerSearch />
+        <ThemeToggle />
       </div>
     </header>
     <main id="main" class="wrap">
