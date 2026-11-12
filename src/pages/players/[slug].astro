@@ -75,10 +75,28 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     </div>
   </div>
 
-  <h2>Season</h2>
+  {/* Quick jump to each section; stays under the top of the window and marks where you are. */}
+  <nav class="jump" aria-label="On this page">
+    <div class="jump-track">
+      {
+        [
+          ["season", "Season"],
+          ["finishes-h", "Where they finish"],
+          ["latest-h", "Latest"],
+          ["streaks", "Streaks"],
+          ["milestones", "Milestones"],
+          ...(byFormat.length > 0 ? [["by-format", "By format"]] : []),
+          ["by-week", "By week"],
+        ].map(([id, label]) => <a href={`#${id}`}>{label}</a>)
+      }
+      <span class="jump-mark" aria-hidden="true"></span>
+    </div>
+  </nav>
+
+  <h2 id="season">Season</h2>
   <SeasonGrid history={player.history} events={events} formats={formats} formatOf={formatOf} />
 
-  <h2>Where they finish</h2>
+  <h2 id="finishes-h">Where they finish</h2>
   <FinishBreakdown history={player.history} />
 
   <div class="latest-head">
@@ -139,7 +157,7 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
   }
 
 
-  <h2>Streaks</h2>
+  <h2 id="streaks">Streaks</h2>
   <div class="stats streaks">
     {
       streakTiles.map(({ label, s, unit }) => (
@@ -163,13 +181,13 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     </div>
   </div>
 
-  <h2>Milestones</h2>
+  <h2 id="milestones">Milestones</h2>
   <Milestones history={player.history} rounds={rounds} />
 
   {
     byFormat.length > 0 && (
       <>
-        <h2>By format</h2>
+        <h2 id="by-format">By format</h2>
         <div class="table-frame">
           <table>
             <thead>
@@ -212,12 +230,69 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     )
   }
 
-  <h2>Finish by week</h2>
+  <h2 id="by-week">Finish by week</h2>
   <PlacementChart history={player.history} />
 
 </Base>
 
 <style>
+  /* Sticky section bar. Tables' pinned header rows sit just below it (--sticky-top). */
+  :global(:root) {
+    --sticky-top: 49px;
+  }
+  .jump {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    margin: 40px 0 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .jump-track {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    height: 48px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .jump-track::-webkit-scrollbar {
+    display: none;
+  }
+  .jump a {
+    display: flex;
+    align-items: center;
+    flex: none;
+    padding: 0 10px;
+    font-size: 14px;
+    color: var(--muted);
+    background: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+  .jump a:first-child {
+    padding-left: 0;
+  }
+  .jump a:hover,
+  .jump a[aria-current="true"] {
+    color: var(--ink);
+  }
+  /* Bronze underline that slides to the section in view. */
+  .jump-mark {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1px;
+    height: 2px;
+    background: var(--accent-soft);
+    transform-origin: left;
+    opacity: 0;
+    transition: transform 0.3s var(--ease), opacity 0.2s;
+  }
+  h2[id],
+  .latest-head h2 {
+    scroll-margin-top: 72px;
+  }
   .compare {
     margin-left: 6px;
     color: var(--accent-soft);
@@ -361,4 +436,41 @@ const recentPct = recent.reduce((a, h) => a + h.rank / h.entrants, 0) / recent.l
     button.textContent = collapsed ? button.dataset.more! : "Show fewer";
   });
   if (button) button.dataset.more = button.textContent!.trim();
+
+  // Section bar: mark the section in view and slide the underline under its link.
+  {
+    const track = document.querySelector<HTMLElement>(".jump-track");
+    if (track) {
+      const links = Array.from(track.querySelectorAll<HTMLAnchorElement>("a"));
+      const mark = track.querySelector<HTMLElement>(".jump-mark")!;
+      const heads = links.map((a) => document.getElementById(a.hash.slice(1))!);
+      let current = -2;
+      const sync = () => {
+        // The last heading that has reached the area just under the bar.
+        let i = -1;
+        heads.forEach((h, j) => {
+          if (h && h.getBoundingClientRect().top <= 96) i = j;
+        });
+        // At the very bottom, the last section counts even if its heading can't reach the top.
+        if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2) i = heads.length - 1;
+        if (i === current) return;
+        current = i;
+        links.forEach((a, j) => a.setAttribute("aria-current", String(j === i)));
+        const a = links[i];
+        mark.style.opacity = a ? "1" : "0";
+        if (!a) return;
+        const pad = parseFloat(getComputedStyle(a).paddingLeft);
+        mark.style.transform = `translateX(${a.offsetLeft + pad}px) scaleX(${a.offsetWidth - pad - parseFloat(getComputedStyle(a).paddingRight)})`;
+        // Phones: keep the active link visible in the sideways-scrolling bar.
+        const left = a.offsetLeft - (track.clientWidth - a.offsetWidth) / 2;
+        track.scrollTo({ left, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      };
+      addEventListener("scroll", sync, { passive: true });
+      addEventListener("resize", () => {
+        current = -2;
+        sync();
+      });
+      sync();
+    }
+  }
 </script>

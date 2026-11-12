@@ -568,7 +568,7 @@ thead th.sticky {
 /* Copy of a long table's header row, pinned to the top of the window (scripts/pinned-head.ts). */
 .pinned-head {
   position: fixed;
-  top: 0;
+  top: var(--sticky-top, 0px);
   z-index: 5;
   overflow: hidden;
   /* Sits inside the frame's 1px side borders. */
