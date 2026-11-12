@@ -21,7 +21,6 @@ const players = standings.map((p, i) => ({
   t8: p.history.filter((h) => h.rank <= 8).length,
   h: p.history.map((h) => [h.date, h.rank]),
 }));
-const byName = [...players].sort((a, b) => a.n.localeCompare(b.n));
 // Row labels for the placeholder card shown until the script fills in the real one.
 const skeletonRows = ["Position", "Points", "Locals played", "Win rate", "Tie rate", "Average finish", "Locals won", "Top 8s"];
 ---
@@ -32,20 +31,23 @@ const skeletonRows = ["Position", "Points", "Locals played", "Win rate", "Tie ra
   <h1 data-enter>Compare players</h1>
   <p class="lede">Season stats side by side, and how they finished on the nights they both played.</p>
 
+  {/* Type-to-search, like the header search. Filled with the chosen pair by the script. */}
   <div class="pickers">
-    <label class="field">
-      <span>Player</span>
-      <select id="pick-a">
-        {byName.map((p) => <option value={p.s}>{p.n}</option>)}
-      </select>
-    </label>
+    <div class="field pick">
+      <label for="pick-a">Player</label>
+      <div class="pick-box">
+        <input id="pick-a" type="search" placeholder="Search players" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="pick-a-list" />
+        <ul id="pick-a-list" role="listbox" aria-label="Players" hidden></ul>
+      </div>
+    </div>
     <span class="vs" aria-hidden="true">vs</span>
-    <label class="field">
-      <span>Compare with</span>
-      <select id="pick-b">
-        {byName.map((p) => <option value={p.s}>{p.n}</option>)}
-      </select>
-    </label>
+    <div class="field pick">
+      <label for="pick-b">Compare with</label>
+      <div class="pick-box">
+        <input id="pick-b" type="search" placeholder="Search players" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="pick-b-list" />
+        <ul id="pick-b-list" role="listbox" aria-label="Players" hidden></ul>
+      </div>
+    </div>
   </div>
 
   <div id="cmp" class="cmp" aria-live="polite">
@@ -85,6 +87,54 @@ const skeletonRows = ["Position", "Points", "Locals played", "Win rate", "Tie ra
     align-items: end;
     gap: 16px;
     margin-top: 32px;
+  }
+  .pick-box {
+    position: relative;
+  }
+  .pick input {
+    width: 100%;
+  }
+  /* Focusing selects the name, so typing replaces it; the browser's clear button isn't needed. */
+  .pick input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+  .pick ul {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+    max-height: 320px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+  .pick ul :global(li) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 15px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .pick ul :global(li[aria-selected="true"]) {
+    background: var(--surface-2);
+  }
+  .pick ul :global(.pos),
+  .pick ul :global(li.none) {
+    color: var(--faint);
+  }
+  .pick ul :global(li.none) {
+    cursor: default;
   }
   .vs {
     padding-bottom: 12px;
@@ -201,8 +251,112 @@ const skeletonRows = ["Position", "Points", "Locals played", "Win rate", "Tie ra
   };
   const players: P[] = JSON.parse(document.getElementById("players")!.textContent!);
   const bySlug = new Map(players.map((p) => [p.s, p]));
-  const pickA = document.getElementById("pick-a") as HTMLSelectElement;
-  const pickB = document.getElementById("pick-b") as HTMLSelectElement;
+  /**
+   * A search box that holds one chosen player. Typing lists matching names (names that start with
+   * the query first, then any that contain it), same as the header search. Leaving the box without
+   * choosing puts the current player's name back.
+   */
+  function picker(input: HTMLInputElement, list: HTMLUListElement, onPick: () => void) {
+    let slug = "";
+    let matches: P[] = [];
+    let active = -1;
+
+    const setActive = (i: number) => {
+      active = i;
+      list.querySelectorAll("li[role=option]").forEach((li, j) => li.setAttribute("aria-selected", String(j === i)));
+      if (i >= 0) {
+        input.setAttribute("aria-activedescendant", `${list.id}-${i}`);
+        list.children[i]?.scrollIntoView({ block: "nearest" });
+      } else input.removeAttribute("aria-activedescendant");
+    };
+    const close = () => {
+      list.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+      setActive(-1);
+    };
+    const show = () => {
+      const q = input.value.trim().toLowerCase();
+      if (!q || q === bySlug.get(slug)?.n.toLowerCase()) return close();
+      const starts: P[] = [];
+      const contains: P[] = [];
+      for (const p of players) {
+        const at = p.n.toLowerCase().indexOf(q);
+        if (at === 0) starts.push(p);
+        else if (at > 0) contains.push(p);
+      }
+      matches = [...starts, ...contains].slice(0, 8);
+      list.replaceChildren(
+        ...(matches.length
+          ? matches.map((p, i) => {
+              const li = document.createElement("li");
+              li.id = `${list.id}-${i}`;
+              li.setAttribute("role", "option");
+              li.innerHTML = `<span></span><span class="pos">#${p.pos}</span>`;
+              li.firstChild!.textContent = p.n;
+              return li;
+            })
+          : [Object.assign(document.createElement("li"), { className: "none", textContent: "No player by that name" })]),
+      );
+      list.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      setActive(matches.length ? 0 : -1);
+    };
+    const choose = (i: number) => {
+      const p = matches[i];
+      if (!p) return;
+      set(p.s);
+      close();
+      input.blur();
+      onPick();
+    };
+    const set = (s: string) => {
+      slug = s;
+      input.value = bySlug.get(s)?.n ?? "";
+    };
+
+    input.addEventListener("input", show);
+    // Select the current name on focus, so typing replaces it straight away.
+    input.addEventListener("focus", () => input.select());
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        if (list.hidden) return show();
+        const n = matches.length;
+        if (n) setActive((active + (e.key === "ArrowDown" ? 1 : n - 1)) % n);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        choose(active);
+      } else if (e.key === "Escape") {
+        close();
+        set(slug);
+      }
+    });
+    // pointerdown so the choice lands before the input's blur closes the list.
+    list.addEventListener("pointerdown", (e) => {
+      const li = (e.target as Element).closest("li[role=option]");
+      if (!li) return;
+      e.preventDefault();
+      choose(Array.from(list.children).indexOf(li));
+    });
+    input.addEventListener("blur", () =>
+      setTimeout(() => {
+        close();
+        set(slug);
+      }, 100),
+    );
+
+    return {
+      get value() {
+        return slug;
+      },
+      set value(s: string) {
+        set(s);
+      },
+    };
+  }
+
+  const pickA = picker(document.getElementById("pick-a") as HTMLInputElement, document.getElementById("pick-a-list") as HTMLUListElement, () => render());
+  const pickB = picker(document.getElementById("pick-b") as HTMLInputElement, document.getElementById("pick-b-list") as HTMLUListElement, () => render());
 
   // better: 1 = higher wins, -1 = lower wins, 0 = neither (tie rate is a style, not a score).
   const rows: { k: string; get: (p: P) => number; fmt: (v: number) => string; better: 1 | -1 | 0 }[] = [
@@ -282,7 +436,5 @@ const skeletonRows = ["Position", "Points", "Locals played", "Win rate", "Tie ra
   pickA.value = bySlug.has(q.get("a") ?? "") ? q.get("a")! : players[0]!.s;
   const fallbackB = players.find((p) => p.s !== pickA.value)!.s;
   pickB.value = bySlug.has(q.get("b") ?? "") && q.get("b") !== pickA.value ? q.get("b")! : fallbackB;
-  pickA.addEventListener("change", render);
-  pickB.addEventListener("change", render);
   render();
 </script>

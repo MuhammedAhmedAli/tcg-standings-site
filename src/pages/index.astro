@@ -110,7 +110,10 @@ const lead = leader && second ? leader.points - second.points : null;
     )
   }
 
-  <h2 id="table-h">All players</h2>
+  <div class="table-head">
+    <h2 id="table-h">All players</h2>
+    <a href={href("/compare/")}>Compare players →</a>
+  </div>
   <StandingsTable standings={standings} labelledby="table-h" movement={movement}>
     <FormatPicker current={null} slot="scope" />
   </StandingsTable>
@@ -255,6 +258,20 @@ const lead = leader && second ? leader.points - second.points : null;
     border-radius: var(--radius);
     background: var(--surface);
     padding: 22px 24px 0;
+  }
+  .table-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .table-head a {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .table-head a:hover {
+    color: var(--ink);
   }
   .latest-head {
     display: flex;
