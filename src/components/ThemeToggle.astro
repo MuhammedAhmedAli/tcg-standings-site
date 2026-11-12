@@ -1,0 +1,89 @@
+---
+/*
+ * Light/dark switch. Pattern from 21st.dev's "Sliding Icon Theme Switch" (one icon that shows the
+ * current mode), rebuilt as a plain icon button to sit beside the search in the header.
+ *
+ * The icon is an original drawing of a capture ball in the theme's colours (bronze top), the same
+ * in both themes. It rolls a full turn when the theme switches.
+ * The theme itself is set before the first paint by the script at the top of Base.astro.
+ */
+---
+
+<button type="button" class="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <g class="tt-ball">
+      <path class="tt-top" d="M3.75 12a8.25 8.25 0 0 1 16.5 0z"></path>
+      <circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+      <path d="M3.75 12h5.3M14.95 12h5.3" stroke="currentColor" stroke-width="1.5"></path>
+      <circle class="tt-button" cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.5"></circle>
+    </g>
+  </svg>
+</button>
+
+<style>
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      background-color 0.15s,
+      transform 160ms var(--ease);
+  }
+  .theme-toggle:hover {
+    color: var(--ink);
+    background: var(--surface);
+  }
+  .theme-toggle:active {
+    transform: scale(0.97);
+  }
+  svg {
+    overflow: visible;
+  }
+  .tt-top {
+    fill: var(--accent);
+  }
+  .tt-button {
+    fill: var(--bg);
+  }
+  .tt-ball {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    transition: transform 0.5s var(--ease);
+  }
+  /* Night is the default. Switching rolls the ball a full turn. */
+  :global(:root[data-theme="light"]) .tt-ball {
+    transform: rotate(-360deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tt-ball {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { applyTheme, currentTheme } from "../scripts/theme";
+
+  const button = document.querySelector<HTMLButtonElement>(".theme-toggle");
+  if (button) {
+    const label = () => {
+      const next = currentTheme() === "dark" ? "light" : "dark";
+      button.setAttribute("aria-label", `Switch to ${next} theme`);
+      button.title = `Switch to ${next} theme`;
+    };
+    label();
+    button.addEventListener("click", () => {
+      applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
+      label();
+    });
+    document.addEventListener("themechange", label);
+  }
+</script>

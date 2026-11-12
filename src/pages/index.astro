@@ -170,12 +170,12 @@ const lead = leader && second ? leader.points - second.points : null;
   .leader {
     display: flex;
     flex-direction: column;
-    border: 1px solid #3a322c;
+    border: 1px solid var(--leader-line);
     border-radius: 16px;
     padding: 28px 30px;
     background:
-      radial-gradient(120% 90% at 85% 0%, rgb(196 171 151 / 0.26), rgb(160 134 114 / 0.07) 45%, transparent 70%),
-      linear-gradient(180deg, #1f1c1a, #161514);
+      radial-gradient(120% 90% at 85% 0%, var(--leader-glow), var(--leader-glow-2) 45%, transparent 70%),
+      linear-gradient(180deg, var(--leader-top), var(--leader-bottom));
   }
   .leader p {
     margin: 0;
