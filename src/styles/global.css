@@ -36,6 +36,9 @@
   --leader-glow-2: rgb(160 134 114 / 0.07);
   --leader-top: #1f1c1a;
   --leader-bottom: #161514;
+  --ball-red: #d9584a;
+  --ball-navy: #34477f;
+  --ball-gold: #f0cf5c;
 
   --font-display: "Space Grotesk", "Space Grotesk Fallback", system-ui, sans-serif;
   --font-text: "Inter", "Inter Fallback", system-ui, sans-serif;
@@ -81,6 +84,9 @@
   --leader-glow-2: rgb(196 171 151 / 0.1);
   --leader-top: #ffffff;
   --leader-bottom: #faf7f4;
+  --ball-red: #cf4436;
+  --ball-navy: #2c3d70;
+  --ball-gold: #e9c24a;
 }
 /* Swap every colour at once when the theme flips, instead of letting each transition run. */
 /* The toggle's own icon is left out so its day/night change still plays. */

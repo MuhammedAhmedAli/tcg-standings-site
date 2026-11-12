@@ -3,34 +3,26 @@
  * Light/dark switch. Pattern from 21st.dev's "Sliding Icon Theme Switch" (one icon that shows the
  * current mode), rebuilt as a plain icon button to sit beside the search in the header.
  *
- * The icons are original drawings in the spirit of the sun and moon rock Pokémon, not official
- * artwork: a flared sun rock by day and a stone crescent by night. Drawn in the site's colours.
+ * The icon is an original drawing of a capture ball: a plain red-topped ball by day that rolls
+ * over into a Moon Ball (navy top, crescent and stars) at night. No official artwork is used.
  * The theme itself is set before the first paint by the script at the top of Base.astro.
  */
 ---
 
 <button type="button" class="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
-  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-    <defs>
-      <mask id="tt-crescent" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-        <circle cx="11" cy="12.5" r="9" fill="#fff"></circle>
-        <circle cx="16.2" cy="8.4" r="7.6" fill="#000"></circle>
-      </mask>
-    </defs>
-    <!-- Day: a sun rock. Flared points around a round body, a dark band across the face. -->
-    <g class="tt-sol">
-      <path class="tt-flare" d="M12 .8 14.04 5.72 17.64 4.23 17.34 8.12 22.65 8.54 18.6 12 21.13 14.97 17.34 15.88 18.58 21.06 14.04 18.28 12 21.6 9.96 18.28 5.42 21.06 6.66 15.88 2.87 14.97 5.4 12 1.35 8.54 6.66 8.12 6.36 4.23 9.96 5.72Z"></path>
-      <circle class="tt-body" cx="12" cy="12" r="6.6"></circle>
-      <path class="tt-band" d="M6.6 11.1c1.6-.7 3.6-.5 5.4.5 1.8-1 3.8-1.2 5.4-.5v2.3c-1.6.6-3.6.4-5.4-.5-1.8.9-3.8 1.1-5.4.5z"></path>
-      <circle class="tt-eye" cx="9.3" cy="12.2" r=".85"></circle>
-      <circle class="tt-eye" cx="14.7" cy="12.2" r=".85"></circle>
-    </g>
-    <!-- Night: a moon rock. A stone crescent with one eye on its inner curve. -->
-    <g class="tt-luna">
-      <rect class="tt-stone" width="24" height="24" mask="url(#tt-crescent)"></rect>
-      <path class="tt-lid" d="M4.3 13.9c1.2-1.5 2.9-2.2 4.6-1.9-.9 1.6-2.7 2.3-4.6 1.9z"></path>
-      <circle class="tt-eye" cx="6.9" cy="13.1" r=".75"></circle>
-      <path class="tt-brow" d="M4.4 11.6c1.3-1.1 3-1.5 4.6-1.1"></path>
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <g class="tt-ball">
+      <!-- Top half: red by day; by night navy with a crescent and two stars. -->
+      <path class="tt-day" d="M3.75 12a8.25 8.25 0 0 1 16.5 0z"></path>
+      <g class="tt-night">
+        <path class="tt-navy" d="M3.75 12a8.25 8.25 0 0 1 16.5 0z"></path>
+        <path class="tt-moon" d="M9.9 5.3a2.75 2.75 0 1 0 3.2 4 2.2 2.2 0 1 1-3.2-4z"></path>
+        <circle class="tt-moon" cx="15.6" cy="6.6" r=".75"></circle>
+        <circle class="tt-moon" cx="17.4" cy="9.4" r=".55"></circle>
+      </g>
+      <circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+      <path d="M3.75 12h5.3M14.95 12h5.3" stroke="currentColor" stroke-width="1.5"></path>
+      <circle class="tt-button" cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.5"></circle>
     </g>
   </svg>
 </button>
@@ -62,56 +54,36 @@
   svg {
     overflow: visible;
   }
-  .tt-flare {
-    fill: var(--bronze-mid);
+  .tt-day {
+    fill: var(--ball-red);
   }
-  .tt-body {
-    fill: var(--accent);
+  .tt-navy {
+    fill: var(--ball-navy);
   }
-  .tt-band {
-    fill: var(--ink);
+  .tt-moon {
+    fill: var(--ball-gold);
   }
-  .tt-stone {
-    fill: var(--accent-soft);
-  }
-  .tt-eye {
-    fill: var(--down);
-  }
-  .tt-lid {
+  .tt-button {
     fill: var(--bg);
   }
-  .tt-brow {
-    fill: none;
-    stroke: var(--bg);
-    stroke-width: 1.1;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .tt-sol,
-  .tt-luna {
+  .tt-ball {
     transform-box: view-box;
     transform-origin: 12px 12px;
-    transition:
-      transform 0.45s var(--ease),
-      opacity 0.25s var(--ease);
+    transition: transform 0.5s var(--ease);
   }
-  /* Night is the default: the moon rock is up, the sun rock has set below. */
-  .tt-sol {
+  .tt-night {
+    transition: opacity 0.2s var(--ease) 0.1s;
+  }
+  /* Night is the default. Going to day the ball rolls back a full turn and the navy fades off. */
+  :global(:root[data-theme="light"]) .tt-ball {
+    transform: rotate(-360deg);
+  }
+  :global(:root[data-theme="light"]) .tt-night {
     opacity: 0;
-    transform: rotate(90deg) scale(0.5);
-  }
-  :global(:root[data-theme="light"]) .tt-sol {
-    opacity: 1;
-    transform: none;
-  }
-  :global(:root[data-theme="light"]) .tt-luna {
-    opacity: 0;
-    transform: rotate(-90deg) scale(0.5);
   }
   @media (prefers-reduced-motion: reduce) {
-    .tt-sol,
-    .tt-luna {
-      transition: opacity 0.15s;
+    .tt-ball {
+      transition: none;
     }
   }
 </style>
