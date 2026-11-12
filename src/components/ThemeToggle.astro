@@ -3,29 +3,16 @@
  * Light/dark switch. Pattern from 21st.dev's "Sliding Icon Theme Switch" (one icon that shows the
  * current mode), rebuilt as a plain icon button to sit beside the search in the header.
  *
- * The icon is an original drawing of a capture ball: a plain bronze-topped ball by day that rolls
- * over into a moon ball (split top with a zigzag and a crescent) at night. No official artwork is used.
+ * The icon is an original drawing of a capture ball in the theme's colours (bronze top), the same
+ * in both themes. It rolls a full turn when the theme switches.
  * The theme itself is set before the first paint by the script at the top of Base.astro.
  */
 ---
 
 <button type="button" class="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
   <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-    <defs>
-      <clipPath id="tt-top"><path d="M3.75 12a8.25 8.25 0 0 1 16.5 0z"></path></clipPath>
-      <mask id="tt-crescent" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-        <circle cx="14.1" cy="7.1" r="2.15" fill="#fff"></circle>
-        <circle cx="15.1" cy="6.4" r="1.7" fill="#000"></circle>
-      </mask>
-    </defs>
     <g class="tt-ball">
-      <!-- Top half in bronze by day. By night: a lighter wedge with a zigzag edge, a dark field and a big crescent. -->
-      <path class="tt-day" d="M3.75 12a8.25 8.25 0 0 1 16.5 0z"></path>
-      <g class="tt-night" clip-path="url(#tt-top)">
-        <path class="tt-navy" d="M3.75 12a8.25 8.25 0 0 1 16.5 0z"></path>
-        <path class="tt-wedge" d="M3.75 12A8.25 8.25 0 0 1 8.4 4.6l1.4 4 -1.6.7 1.9 2.7z"></path>
-        <rect class="tt-moon" width="24" height="24" mask="url(#tt-crescent)"></rect>
-      </g>
+      <path class="tt-top" d="M3.75 12a8.25 8.25 0 0 1 16.5 0z"></path>
       <circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
       <path d="M3.75 12h5.3M14.95 12h5.3" stroke="currentColor" stroke-width="1.5"></path>
       <circle class="tt-button" cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.5"></circle>
@@ -60,18 +47,8 @@
   svg {
     overflow: visible;
   }
-  .tt-day {
+  .tt-top {
     fill: var(--accent);
-  }
-  /* Moon ball in the theme's colours: grey field, bronze wedge, crescent in the icon's line colour. */
-  .tt-navy {
-    fill: var(--line-strong);
-  }
-  .tt-wedge {
-    fill: var(--accent);
-  }
-  .tt-moon {
-    fill: currentColor;
   }
   .tt-button {
     fill: var(--bg);
@@ -81,15 +58,9 @@
     transform-origin: 12px 12px;
     transition: transform 0.5s var(--ease);
   }
-  .tt-night {
-    transition: opacity 0.2s var(--ease) 0.1s;
-  }
-  /* Night is the default. Going to day the ball rolls back a full turn and the navy fades off. */
+  /* Night is the default. Switching rolls the ball a full turn. */
   :global(:root[data-theme="light"]) .tt-ball {
     transform: rotate(-360deg);
-  }
-  :global(:root[data-theme="light"]) .tt-night {
-    opacity: 0;
   }
   @media (prefers-reduced-motion: reduce) {
     .tt-ball {
